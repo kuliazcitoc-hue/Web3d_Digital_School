@@ -7,29 +7,38 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Mercado Digital</title>
+<meta name="theme-color" content="#0b0d12"/>
+<link rel="icon" href="data:,"/>
+<title>Coinmash — Mercado escolar</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet"/>
 <style>
   /* ── Variables ───────────────────────────────────────────────── */
   :root{
-    --bg:#0d0f14;
-    --surface:#161a22;
-    --surface2:#1e2330;
-    --border:#2a3040;
-    --accent:#f0c040;
-    --accent2:#e07a30;
-    --text:#eef0f5;
-    --muted:#7a8099;
-    --red:#e05555;
-    --green:#4caf80;
-    --radius:12px;
-    --shadow:0 4px 24px rgba(0,0,0,.45);
+    color-scheme:dark;
+    --bg:#0b0d12;
+    --surface:#121620;
+    --surface2:#1a1f2b;
+    --border:#272e3d;
+    --accent:#f4c95d;
+    --accent2:#eb9752;
+    --text:#f3f4f8;
+    --muted:#939bad;
+    --red:#e66a6a;
+    --green:#62c69a;
+    --radius:16px;
+    --shadow:0 16px 50px rgba(0,0,0,.28);
+    --ease:cubic-bezier(.2,.75,.25,1);
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden}
+  html{background:var(--bg);scroll-behavior:smooth}
+  body{background:radial-gradient(ellipse 60% 30% at 50% -10%,#2a251a66,transparent),var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden}
   h1,h2,h3,h4{font-family:'Syne',sans-serif}
+  button,input,textarea,select{touch-action:manipulation}
+  button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{
+    outline:2px solid var(--accent);outline-offset:3px
+  }
 
   /* ── Scrollbar ───────────────────────────────────────────────── */
   ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
@@ -56,7 +65,7 @@
     font-family:'Syne',sans-serif;font-size:2.4rem;font-weight:800;
     animation:coinmash-flip .75s ease-in-out 3
   }
-  .coinmash-school-icon{font-size:2rem;filter:drop-shadow(0 5px 12px #0008);animation:coinmash-bob 1.4s ease-in-out infinite}
+  .coinmash-school-icon{width:38px;height:38px;color:#d9deeb;filter:drop-shadow(0 5px 12px #0008);animation:coinmash-bob 1.4s ease-in-out infinite}
   .coinmash-school-icon:last-child{animation-delay:.35s}
   .coinmash-title{font-family:'Syne',sans-serif;font-size:clamp(2.5rem,9vw,4.5rem);font-weight:800;letter-spacing:.08em;
     background:linear-gradient(100deg,#fff1bd 10%,var(--accent) 48%,#f28c42 90%);color:transparent;background-clip:text}
@@ -84,16 +93,16 @@
   .badge-blue{background:#4090e022;color:#60aaff;border:1px solid #4090e055}
 
   /* ── Botones ─────────────────────────────────────────────────── */
-  button{cursor:pointer;border:none;outline:none;font-family:'DM Sans',sans-serif}
-  .btn{padding:10px 22px;border-radius:8px;font-size:.9rem;font-weight:500;transition:all .18s}
-  .btn-primary{background:var(--accent);color:#000;font-weight:700}
-  .btn-primary:hover{background:#ffd060;transform:translateY(-1px)}
-  .btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
-  .btn-secondary:hover{background:var(--border)}
+  button{cursor:pointer;border:none;font-family:'DM Sans',sans-serif}
+  .btn{padding:10px 22px;border-radius:10px;font-size:.9rem;font-weight:600;transition:transform .2s var(--ease),background-color .2s,border-color .2s,box-shadow .2s}
+  .btn-primary{background:linear-gradient(135deg,#f6d46e,#eeb845);color:#241a05;font-weight:800;box-shadow:0 5px 18px #eab94822}
+  .btn-primary:hover{background:linear-gradient(135deg,#ffe18b,#f2c452);transform:translateY(-2px);box-shadow:0 9px 24px #eab94833}
+  .btn-secondary{background:#ffffff07;color:var(--text);border:1px solid var(--border)}
+  .btn-secondary:hover{background:var(--surface2);border-color:#414b5e;transform:translateY(-1px)}
   .btn-danger{background:var(--red);color:#fff}
   .btn-danger:hover{background:#ff6666}
   .btn-sm{padding:6px 14px;font-size:.8rem}
-  .btn-icon{background:none;padding:6px;border-radius:6px;color:var(--muted);transition:color .15s,background .15s}
+  .btn-icon{background:none;padding:8px;border-radius:8px;color:var(--muted);transition:color .15s,background .15s}
   .btn-icon:hover{background:var(--surface2);color:var(--text)}
 
   /* ── Inputs ──────────────────────────────────────────────────── */
@@ -102,12 +111,12 @@
     border-radius:8px;padding:10px 14px;font-family:'DM Sans',sans-serif;font-size:.9rem;
     transition:border-color .15s;width:100%
   }
-  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent)}
-  label{font-size:.82rem;color:var(--muted);margin-bottom:4px;display:block}
+  input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px #f4c95d1c}
+  label{font-size:.8rem;color:#bdc3d0;margin-bottom:7px;display:block;font-weight:600}
   .field{margin-bottom:14px}
 
   /* ── Tarjetas ────────────────────────────────────────────────── */
-  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)}
+  .card{background:linear-gradient(155deg,#171c27,#11151d 76%);border:1px solid #ffffff12;border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)}
 
   /* ── Carrito ─────────────────────────────────────────────────── */
   .cart-toggle{
@@ -115,6 +124,7 @@
     color:var(--text);padding:8px 12px;border-radius:999px;font-size:.8rem;font-weight:700
   }
   .cart-toggle:hover{background:var(--border)}
+  .cart-toggle svg{width:18px;height:18px;flex:none}
   .cart-badge{
     min-width:20px;height:20px;padding:0 6px;border-radius:50%;background:var(--accent);color:#111;font-size:.7rem;
     display:inline-flex;align-items:center;justify-content:center;font-weight:800
@@ -128,7 +138,9 @@
   .cart-item{display:flex;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px}
   .cart-item-media{width:70px;height:70px;border-radius:10px;overflow:hidden;background:var(--surface2);flex-shrink:0}
   .cart-item-media img{width:100%;height:100%;object-fit:cover}
-  .cart-item-media.noimg{display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:1.1rem}
+  .cart-item-media.noimg{display:flex;align-items:center;justify-content:center;color:var(--muted)}
+  .cart-item-media.noimg svg{width:25px;height:25px}
+  .icon-stroke{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
   .cart-item-body{flex:1;display:flex;flex-direction:column;justify-content:space-between;min-width:0}
   .cart-item-name{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .cart-item-price{font-size:.9rem;color:var(--accent);font-weight:700;margin-top:3px}
@@ -159,7 +171,7 @@
     background:var(--surface);border:1px solid var(--border);
     border-radius:10px;padding:14px 20px;font-size:.88rem;
     box-shadow:var(--shadow);transform:translateY(20px);opacity:0;
-    transition:all .3s;pointer-events:none;max-width:320px;line-height:1.4
+    transition:transform .3s var(--ease),opacity .3s;pointer-events:none;max-width:min(360px,calc(100vw - 32px));line-height:1.4
   }
   #toast.show{transform:translateY(0);opacity:1}
   #toast.ok{border-left:4px solid var(--green)}
@@ -170,11 +182,12 @@
     position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;
     display:flex;align-items:center;justify-content:center;padding:20px
   }
-  .modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;
-    padding:28px;width:100%;max-width:460px;box-shadow:var(--shadow);position:relative}
+  .modal{  background:linear-gradient(155deg,#191e29,#11151d 76%);border:1px solid #ffffff17;border-radius:20px;
+  padding:30px;width:100%;max-width:460px;box-shadow:0 28px 90px #0009;position:relative;animation:modal-enter .22s var(--ease) both}
   .modal h3{font-size:1.2rem;margin-bottom:18px}
-  .modal-close{position:absolute;top:16px;right:16px;background:none;border:none;
-    color:var(--muted);font-size:1.4rem;cursor:pointer;padding:4px 8px;border-radius:6px}
+  .modal-close{position:absolute;top:14px;right:14px;background:none;border:none;
+    color:var(--muted);cursor:pointer;padding:8px;border-radius:8px;display:grid;place-items:center}
+  .modal-close svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
   .modal-close:hover{background:var(--surface2);color:var(--text)}
 
   /* ── Loader ──────────────────────────────────────────────────── */
@@ -185,19 +198,18 @@
   /* AUTH                                                           */
   /* ══════════════════════════════════════════════════════════════ */
   #authPage{
-    min-height:100vh;display:flex;align-items:center;justify-content:center;
-    background:radial-gradient(ellipse 70% 60% at 50% 0%,#1e2a14 0%,var(--bg) 70%)
+    min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;
+    background:radial-gradient(ellipse 46% 40% at 50% 0%,#4a35151c,transparent 80%),radial-gradient(ellipse at 0% 100%,#202a3a22,transparent 48%),var(--bg)
   }
-  .auth-box{width:100%;max-width:420px;padding:36px 32px}
-  .auth-logo{font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;
-    background:linear-gradient(135deg,var(--accent),var(--accent2));
-    -webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px}
+  .auth-box{position:relative;overflow:hidden;width:100%;max-width:440px;padding:38px 36px;background:linear-gradient(155deg,#171c27,#10141c 76%);border-color:#ffffff17}
+  .auth-box::before{content:"";position:absolute;inset:0 0 auto;height:2px;background:linear-gradient(90deg,transparent,var(--accent),var(--accent2),transparent)}
+  .auth-brand{font-size:1.45rem;margin-bottom:10px}
   .auth-sub{color:var(--muted);font-size:.9rem;margin-bottom:28px}
-  .auth-tabs{display:flex;gap:6px;margin-bottom:22px;background:var(--surface2);
+  .auth-tabs{display:flex;gap:6px;margin-bottom:22px;background:#0c0f15;
     border-radius:10px;padding:4px}
-  .auth-tab{flex:1;padding:8px;border-radius:7px;background:none;color:var(--muted);
-    font-size:.85rem;font-weight:600;transition:all .2s;font-family:'Syne',sans-serif}
-  .auth-tab.active{background:var(--surface);color:var(--text);box-shadow:var(--shadow)}
+  .auth-tab{flex:1;padding:9px;border-radius:8px;background:none;color:var(--muted);
+    font-size:.85rem;font-weight:600;transition:color .2s,background-color .2s,box-shadow .2s;font-family:'Syne',sans-serif}
+  .auth-tab.active{background:var(--surface2);color:var(--text);box-shadow:0 4px 14px #0004}
   .auth-footer{margin-top:14px;color:var(--muted);font-size:.8rem;text-align:center}
 
   /* ══════════════════════════════════════════════════════════════ */
@@ -207,30 +219,47 @@
 
   /* ── Topbar ──────────────────────────────────────────────────── */
   #topbar{
-    background:var(--surface);border-bottom:1px solid var(--border);
-    padding:0 28px;height:60px;display:flex;align-items:center;
+    background:#10131bd9;border-bottom:1px solid #ffffff10;backdrop-filter:blur(18px);
+    padding:0 max(28px,calc((100vw - 1440px)/2));height:72px;display:flex;align-items:center;
     justify-content:space-between;position:sticky;top:0;z-index:100
   }
-  .topbar-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem;
-    background:linear-gradient(135deg,var(--accent),var(--accent2));
-    -webkit-background-clip:text;-webkit-text-fill-color:transparent}
-  .topbar-nav{display:flex;gap:4px}
-  .nav-btn{background:none;border:none;color:var(--muted);padding:7px 14px;
-    border-radius:8px;font-size:.85rem;font-weight:600;font-family:'Syne',sans-serif;
-    transition:all .18s;cursor:pointer}
-  .nav-btn:hover{color:var(--text);background:var(--surface2)}
-  .nav-btn.active{color:var(--accent);background:#f0c04015}
+  .topbar-logo,.auth-brand{display:flex;align-items:center;gap:11px;font-family:'Syne',sans-serif;font-weight:800;font-size:1.13rem;letter-spacing:.01em;color:var(--text)}
+  .brand-mark{width:34px;height:34px;display:grid;place-items:center;border-radius:11px;background:linear-gradient(145deg,#f7d675,#e99a43);color:#281c08;box-shadow:0 5px 20px #eeb84a2e}
+  .brand-mark svg{width:20px;height:20px}
+  .topbar-nav{display:flex;gap:5px}
+  .nav-btn{background:none;border:1px solid transparent;color:var(--muted);padding:9px 13px;
+    border-radius:10px;font-size:.82rem;font-weight:600;font-family:'DM Sans',sans-serif;
+    transition:color .18s,background-color .18s,border-color .18s;cursor:pointer}
+  .nav-btn:hover{color:var(--text);background:#ffffff08}
+  .nav-btn.active{color:var(--accent);background:#f4c95d12;border-color:#f4c95d22}
   .topbar-right{display:flex;align-items:center;gap:12px}
-  .coin-badge{background:#f0c04018;border:1px solid #f0c04040;color:var(--accent);
-    padding:5px 12px;border-radius:20px;font-size:.85rem;font-weight:700;
+  .coin-badge{background:linear-gradient(135deg,#f4c95d18,#eb97520d);border:1px solid #f4c95d36;color:var(--accent);
+    padding:8px 13px;border-radius:12px;font-size:.82rem;font-weight:700;
     font-family:'Syne',sans-serif}
 
   /* ── Main content ────────────────────────────────────────────── */
-  #mainContent{flex:1;padding:28px;max-width:1200px;width:100%;margin:0 auto}
+  #mainContent{flex:1;padding:34px 32px 60px;max-width:1440px;width:100%;margin:0 auto}
 
   /* ── Sección título ──────────────────────────────────────────── */
-  .section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}
-  .section-title{font-size:1.4rem;font-weight:800}
+  .section-header{display:flex;justify-content:space-between;align-items:center;gap:18px;margin-bottom:24px}
+  .section-title{font-size:clamp(1.4rem,3vw,1.85rem);font-weight:800;letter-spacing:-.035em;text-wrap:balance}
+  .section-heading{display:grid;gap:5px}
+  .section-eyebrow{font-size:.68rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--accent)}
+  .section-caption{color:var(--muted);font-size:.88rem}
+  .market-hero{
+    position:relative;isolation:isolate;overflow:hidden;display:flex;align-items:center;justify-content:space-between;gap:24px;
+    min-height:190px;margin:2px 0 30px;padding:32px 38px;border:1px solid #f4c95d22;border-radius:22px;
+    background:radial-gradient(ellipse at 85% 50%,#f4c95d18,transparent 42%),linear-gradient(110deg,#191d28,#141821 62%,#1b1b1b);
+    animation:card-enter .5s var(--ease) both
+  }
+  .market-hero::after{content:"";position:absolute;z-index:-1;width:250px;height:250px;right:8%;top:-125px;border:1px solid #f4c95d22;border-radius:50%;box-shadow:0 0 0 30px #f4c95d08,0 0 0 60px #f4c95d05}
+  .market-hero-copy{max-width:620px}
+  .market-hero-kicker{display:flex;align-items:center;gap:8px;color:var(--accent);font-size:.72rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
+  .market-hero-kicker::before{content:"";width:22px;height:1px;background:var(--accent)}
+  .market-hero h1{margin-top:12px;font-size:clamp(1.7rem,4vw,2.65rem);line-height:1.08;letter-spacing:-.045em;text-wrap:balance}
+  .market-hero p{max-width:480px;margin-top:10px;color:#a7adba;font-size:.91rem;line-height:1.6}
+  .market-hero-art{position:relative;z-index:1;display:grid;place-items:center;width:112px;height:112px;flex:0 0 112px;border:1px solid #f4c95d38;border-radius:30px;background:linear-gradient(145deg,#f4c95d1a,#f4c95d04);transform:rotate(8deg);animation:hero-float 4s ease-in-out infinite}
+  .market-hero-art svg{width:56px;height:56px;color:var(--accent)}
 
   /* ══════════════════════════════════════════════════════════════ */
   /* PRODUCTOS GRID                                                 */
@@ -238,36 +267,44 @@
   .products-grid{
     display:grid;
     grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
-    gap:18px
+    gap:20px
   }
   .product-card{
-    background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
-    overflow:hidden;transition:transform .2s,box-shadow .2s;cursor:pointer
+    background:linear-gradient(165deg,#171c27,#11151d 72%);border:1px solid #ffffff12;border-radius:18px;
+    overflow:hidden;transition:transform .28s var(--ease),box-shadow .28s var(--ease),border-color .2s;cursor:pointer;
+    animation:card-enter .48s var(--ease) both
   }
-  .product-card:hover{transform:translateY(-4px);box-shadow:0 8px 32px rgba(0,0,0,.5)}
-  .product-card.promoted{border-color:#f0c04055;box-shadow:0 0 0 1px #f0c04033}
-  .product-img{width:100%;height:160px;object-fit:cover;background:var(--surface2);
+  .product-card:nth-child(2){animation-delay:35ms}
+  .product-card:nth-child(3){animation-delay:70ms}
+  .product-card:nth-child(4){animation-delay:105ms}
+  .product-card:nth-child(5){animation-delay:140ms}
+  .product-card:nth-child(6){animation-delay:175ms}
+  .product-card:hover{transform:translateY(-5px);border-color:#f4c95d55;box-shadow:0 18px 36px rgba(0,0,0,.28),0 0 0 1px #f4c95d0c}
+  .product-card.promoted{border-color:#f4c95d55;box-shadow:0 0 0 1px #f4c95d14}
+  .product-img{width:100%;height:190px;object-fit:cover;background:linear-gradient(145deg,#202635,#171b25);
     display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:2.5rem}
   .product-img img{width:100%;height:100%;object-fit:cover}
+  .product-placeholder{display:grid;place-items:center;gap:10px;color:#8d96a9;font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+  .product-placeholder svg{width:36px;height:36px;color:#707b90}
   .mini-cart-btn:disabled{opacity:.55;cursor:not-allowed}
-  .product-body{padding:14px}
+  .product-body{padding:17px}
   .product-name{font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;margin-bottom:4px;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .product-desc{font-size:.8rem;color:var(--muted);margin-bottom:10px;
     display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
   .product-footer{display:flex;justify-content:space-between;align-items:center}
-  .product-price{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800;color:var(--accent)}
+  .product-price{font-family:'Syne',sans-serif;font-size:1.15rem;font-weight:800;color:var(--accent);font-variant-numeric:tabular-nums}
   .product-stock{font-size:.78rem;color:var(--muted)}
   .promoted-tag{
     background:linear-gradient(90deg,var(--accent),var(--accent2));
-    color:#000;font-size:.68rem;font-weight:800;padding:2px 8px;
-    position:absolute;top:10px;right:10px;border-radius:4px;letter-spacing:.05em
+    color:#241a05;font-size:.65rem;font-weight:800;padding:5px 10px;
+    position:absolute;top:12px;right:12px;border-radius:999px;letter-spacing:.08em;box-shadow:0 4px 14px #0004
   }
 
   /* ══════════════════════════════════════════════════════════════ */
   /* PERFIL                                                         */
   /* ══════════════════════════════════════════════════════════════ */
-  .profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .profile-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
   @media(max-width:640px){.profile-grid{grid-template-columns:1fr}}
   .profile-card{padding:22px}
   .profile-label{font-size:.75rem;color:var(--muted);text-transform:uppercase;
@@ -287,13 +324,14 @@
   .stat-card{padding:20px;text-align:center}
   .stat-value{font-family:'Syne',sans-serif;font-size:2.2rem;font-weight:800;color:var(--accent)}
   .stat-label{color:var(--muted);font-size:.82rem;margin-top:4px}
-  .admin-section{margin-bottom:32px}
+  .admin-section{margin-bottom:32px;padding:24px;border:1px solid #ffffff0d;border-radius:18px;background:#11151c99;animation:card-enter .42s var(--ease) both}
   .admin-section h3{font-size:1rem;margin-bottom:14px;color:var(--muted);
     text-transform:uppercase;letter-spacing:.08em}
-  table{width:100%;border-collapse:collapse;font-size:.85rem}
+  table{width:100%;border-collapse:collapse;font-size:.85rem;font-variant-numeric:tabular-nums}
   th{padding:10px 12px;text-align:left;color:var(--muted);font-weight:600;
     border-bottom:1px solid var(--border);font-size:.78rem;text-transform:uppercase}
-  td{padding:10px 12px;border-bottom:1px solid var(--border)}
+  td{padding:12px;border-bottom:1px solid var(--border)}
+  tbody tr{transition:background-color .16s}
   tr:last-child td{border-bottom:none}
   tr:hover td{background:rgba(255,255,255,.02)}
 
@@ -303,8 +341,9 @@
   .purchase-item{
     display:flex;justify-content:space-between;align-items:center;
     padding:14px 18px;background:var(--surface);border:1px solid var(--border);
-    border-radius:10px;margin-bottom:10px
+    border-radius:13px;margin-bottom:10px;transition:transform .2s var(--ease),border-color .2s
   }
+  .purchase-item:hover{transform:translateX(3px);border-color:#f4c95d30}
   .purchase-item .pi-name{font-weight:600;font-size:.9rem}
   .purchase-item .pi-meta{font-size:.78rem;color:var(--muted);margin-top:3px}
   .purchase-item .pi-price{font-family:'Syne',sans-serif;font-weight:800;
@@ -332,34 +371,67 @@
   .chat-input input{min-width:0}
   .chat-input .btn{flex:0 0 auto}
   .chat-empty{padding:24px;color:var(--muted);text-align:center;font-size:.84rem}
+  .nav-btn,.mini-cart-btn,.cart-toggle,.qty-box button,.cart-remove{touch-action:manipulation}
 
   /* ══════════════════════════════════════════════════════════════ */
   /* RESPONSIVE                                                     */
   /* ══════════════════════════════════════════════════════════════ */
+  @keyframes card-enter{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes modal-enter{from{opacity:0;transform:translateY(12px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+  @keyframes hero-float{0%,100%{transform:translateY(0) rotate(8deg)}50%{transform:translateY(-7px) rotate(4deg)}}
+  @media(prefers-reduced-motion:reduce){
+    *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+  }
   @media(max-width:700px){
-    #topbar{padding:0 16px}
-    .topbar-nav{display:none}
-    #mainContent{padding:16px}
+    #topbar{padding:0 16px;backdrop-filter:none}
+    .topbar-nav{position:fixed;inset:auto 0 0;z-index:110;display:flex;gap:5px;overflow-x:auto;justify-content:flex-start;padding:9px 12px calc(9px + env(safe-area-inset-bottom));background:#10131bed;border-top:1px solid #ffffff14;backdrop-filter:blur(18px);scrollbar-width:none;overscroll-behavior:contain}
+    .topbar-nav::-webkit-scrollbar{display:none}
+    .nav-btn{flex:0 0 auto;padding:9px 12px}
+    #mainContent{padding:22px 16px calc(92px + env(safe-area-inset-bottom))}
+    .market-hero{min-height:160px;padding:24px;border-radius:18px}
+    .market-hero-art{width:72px;height:72px;flex-basis:72px;border-radius:22px}
+    .market-hero-art svg{width:38px;height:38px}
+    .section-header{align-items:flex-start}
     .products-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}
+    .product-img{height:155px}
     .chat-shell{grid-template-columns:1fr}
     .chat-list{min-height:0;max-height:210px;overflow-y:auto}
     .chat-box{min-height:390px}
     .msg{max-width:88%}
+  }
+  @media(max-width:430px){
+    #topbar{height:64px;padding:0 12px}
+    .topbar-logo{gap:8px;font-size:.9rem}
+    .brand-mark{width:28px;height:28px}
+    .topbar-right{gap:5px}
+    .topbar-right .btn-sm{padding:6px 9px}
+    .coin-badge{padding:6px 7px;font-size:.66rem;white-space:nowrap}
+    .cart-toggle{padding:7px 9px}
+    .cart-toggle>span:nth-child(2){display:none}
+    .market-hero{padding:21px 18px}
+    .market-hero-art{display:none}
+    .section-header{flex-direction:column;align-items:stretch}
+    .section-header>input{max-width:none!important}
+    .products-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    .product-img{height:128px}
+    .product-body{padding:13px}
+    .product-footer{align-items:flex-start;flex-direction:column;gap:3px}
+    .product-price{font-size:.9rem;white-space:nowrap}
   }
 </style>
 </head>
 <body>
 
 <!-- ══ TOAST ══════════════════════════════════════════════════════ -->
-<div id="toast"></div>
+<div id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 <div id="coinmashIntro" class="coinmash-intro hidden" role="dialog" aria-modal="true" aria-labelledby="coinmashTitle" aria-hidden="true">
   <button id="coinmashSkip" class="coinmash-skip" type="button" onclick="closeCoinmashIntro()">Saltar</button>
   <div class="coinmash-content">
     <div class="coinmash-kicker">Tu mercado escolar</div>
     <div class="coinmash-emblems" aria-hidden="true">
-      <span class="coinmash-school-icon">📚</span>
+      <svg class="coinmash-school-icon" viewBox="0 0 40 40" fill="none"><path d="M6 9.5C11.3 7.2 16.1 7.7 20 10v23c-3.9-2.3-8.7-2.8-14-0.5v-23ZM34 9.5C28.7 7.2 23.9 7.7 20 10v23c3.9-2.3 8.7-2.8 14-.5v-23Z" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><path d="M10 14c2.7-.8 5-.5 7.2.5M10 19c2.7-.8 5-.5 7.2.5m12-6c-2.7-.8-5-.5-7.2.5m7.2 4.5c-2.7-.8-5-.5-7.2.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
       <span class="coinmash-coin">M</span>
-      <span class="coinmash-school-icon">✏️</span>
+      <svg class="coinmash-school-icon" viewBox="0 0 40 40" fill="none"><path d="m9 28 2.2-7.1L27.5 4.6a3.3 3.3 0 0 1 4.7 0l3.2 3.2a3.3 3.3 0 0 1 0 4.7L19.1 28.8 12 31l-3-3Z" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><path d="m24.9 7.2 7.9 7.9M8 34h25" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
     </div>
     <h1 id="coinmashTitle" class="coinmash-title">COINMASH</h1>
     <p id="coinmashWelcome" class="coinmash-welcome">Preparando tu mercado…</p>
@@ -370,8 +442,11 @@
 <!-- ══ AUTH PAGE ══════════════════════════════════════════════════ -->
 <div id="authPage">
   <div class="card auth-box">
-    <div class="auth-logo">Mercado Digital</div>
-    <div class="auth-sub">Plataforma de compras y ventas estudiantil</div>
+    <div class="auth-brand">
+      <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="2"/><path d="M15.4 8.8c-.7-.7-1.8-1.1-3.2-1.1-1.8 0-3 .8-3 2s1 1.7 3.1 2.1c2 .4 3.1 1 3.1 2.2s-1.3 2.2-3.2 2.2c-1.4 0-2.7-.5-3.5-1.4M12.2 5.8v12.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></span>
+      <span>Coinmash</span>
+    </div>
+    <div class="auth-sub">El mercado escolar, hecho para compartir.</div>
 
     <div class="auth-tabs">
       <button class="auth-tab active" onclick="showAuthTab('login')">Ingresar</button>
@@ -382,7 +457,7 @@
     <div id="loginForm">
       <div class="field"><label>Nombre completo</label><input id="lNombre" placeholder="Tu nombre completo"/></div>
       <div class="field"><label>Contraseña</label><input id="lPassword" type="password" placeholder="Contraseña"/></div>
-      <button class="btn btn-primary" style="width:100%;margin-top:6px" onclick="doLogin()">Entrar →</button>
+      <button class="btn btn-primary" style="width:100%;margin-top:6px" onclick="doLogin()">Entrar</button>
       <button class="btn-icon" style="width:100%;margin-top:10px" onclick="showRecoveryForm()">Olvidé mi contraseña</button>
     </div>
 
@@ -422,10 +497,10 @@
       <div class="field"><label>Contacto (WhatsApp / Instagram)</label><input id="rContacto" placeholder="@usuario o número"/></div>
       <div class="field"><label>Código de invitación</label><input id="rCode" placeholder="Ej: MD-ABCD12"/></div>
       <div class="field"><label>Código de admin (opcional)</label><input id="rAdminCode" placeholder="Solo si eres administrador"/></div>
-      <button class="btn btn-primary" style="width:100%;margin-top:6px" onclick="doRegister()">Crear cuenta →</button>
+      <button class="btn btn-primary" style="width:100%;margin-top:6px" onclick="doRegister()">Crear cuenta</button>
     </div>
 
-    <div class="auth-footer">Mercado Digital · Solo para estudiantes registrados</div>
+    <div class="auth-footer">COINMASH · Un mercado hecho por estudiantes</div>
   </div>
 </div>
 
@@ -433,19 +508,23 @@
 <div id="appPage" class="hidden">
   <!-- Topbar -->
   <div id="topbar">
-    <div class="topbar-logo">Mercado Digital</div>
+    <div class="topbar-logo">
+      <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="2"/><path d="M15.4 8.8c-.7-.7-1.8-1.1-3.2-1.1-1.8 0-3 .8-3 2s1 1.7 3.1 2.1c2 .4 3.1 1 3.1 2.2s-1.3 2.2-3.2 2.2c-1.4 0-2.7-.5-3.5-1.4M12.2 5.8v12.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></span>
+      <span>Coinmash</span>
+    </div>
     <nav class="topbar-nav">
       <button class="nav-btn active" onclick="showSection('market')">Mercado</button>
       <button class="nav-btn" onclick="showSection('myProducts')" id="navMyProducts">Mis productos</button>
       <button class="nav-btn" onclick="showSection('purchases')">Historial</button>
       <button class="nav-btn" onclick="showSection('chat')">Chat</button>
       <button class="nav-btn" onclick="showSection('profile')">Perfil</button>
-      <button class="nav-btn hidden" id="navAdmin" onclick="showSection('admin')">⚙️ Admin</button>
+      <button class="nav-btn hidden" id="navAdmin" onclick="showSection('admin')">Administración</button>
     </nav>
     <div class="topbar-right">
       <span class="coin-badge" id="coinDisplay">—</span>
-      <button class="cart-toggle" onclick="toggleCart()">
-        🛒 <span>Carrito</span> <span class="cart-badge" id="cartBadge">0</span>
+      <button class="cart-toggle" onclick="toggleCart()" aria-label="Abrir carrito">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none"><path d="M3 4h2l2.2 11.1a2 2 0 0 0 2 1.6h8.4a2 2 0 0 0 1.9-1.4L21 9H6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="10" cy="20" r="1.2" fill="currentColor"/><circle cx="18" cy="20" r="1.2" fill="currentColor"/></svg>
+        <span>Carrito</span> <span class="cart-badge" id="cartBadge">0</span>
       </button>
       <button class="btn btn-secondary btn-sm" onclick="doLogout()">Salir</button>
     </div>
@@ -457,10 +536,23 @@
     <!-- ── MERCADO ─────────────────────────────────────────────── -->
     <div id="sectionMarket">
       <div class="section-header">
-        <span class="section-title">Mercado</span>
+        <div class="section-heading">
+          <span class="section-eyebrow">Descubre algo nuevo</span>
+          <span class="section-title">El mercado</span>
+        </div>
         <input id="searchInput" placeholder="Buscar productos…" style="max-width:240px" oninput="filterProducts()"/>
       </div>
 
+      <section class="market-hero" aria-label="Bienvenido a Coinmash">
+        <div class="market-hero-copy">
+          <div class="market-hero-kicker">La comunidad se encuentra aquí</div>
+          <h1>Buenas ideas.<br/>Grandes recreos.</h1>
+          <p>Encuentra productos hechos por estudiantes y descubre lo mejor de tu comunidad escolar.</p>
+        </div>
+        <div class="market-hero-art" aria-hidden="true">
+          <svg viewBox="0 0 64 64" fill="none"><path d="M12 19.5c6.8-3 13.4-2.5 20 1v29c-6.6-3.5-13.2-4-20-1v-29Zm40 0c-6.8-3-13.4-2.5-20 1v29c6.6-3.5 13.2-4 20-1v-29Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M18 27c3.7-1.1 7.2-.8 10.5.6M18 34c3.7-1.1 7.2-.8 10.5.6m17-8.2c-3.7-1.1-7.2-.8-10.5.6M45.5 34c-3.7-1.1-7.2-.8-10.5.6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="49" cy="13" r="7" fill="#f4c95d" fill-opacity=".2" stroke="currentColor" stroke-width="1.5"/><path d="M51.7 10.9c-.5-.5-1.3-.8-2.4-.8-1.3 0-2.2.6-2.2 1.5s.7 1.3 2.2 1.6c1.4.3 2.2.7 2.2 1.6s-.9 1.6-2.3 1.6c-1 0-1.9-.4-2.5-1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        </div>
+      </section>
       <!-- Destacados -->
       <div id="promotedSection" class="hidden" style="margin-bottom:28px">
         <h3 style="font-size:.85rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px">Destacados</h3>
@@ -483,7 +575,7 @@
     <div id="sectionPurchases" class="hidden">
       <div class="section-header">
         <span class="section-title">Historial de transacciones</span>
-        <button class="btn btn-secondary btn-sm" onclick="loadPurchases()">↺ Actualizar</button>
+        <button class="btn btn-secondary btn-sm" onclick="loadPurchases()">Actualizar</button>
       </div>
       <div id="purchasesList"><div class="spinner"></div></div>
     </div>
@@ -492,7 +584,7 @@
     <div id="sectionChat" class="hidden">
       <div class="section-header">
         <span class="section-title">Chat</span>
-        <button class="btn btn-secondary btn-sm" onclick="loadConversations()">↺ Actualizar</button>
+        <button class="btn btn-secondary btn-sm" onclick="loadConversations()">Actualizar</button>
       </div>
       <div id="chatSection"></div>
     </div>
@@ -505,7 +597,7 @@
 
     <!-- ── ADMIN ─────────────────────────────────────────────────── -->
     <div id="sectionAdmin" class="hidden">
-      <div class="section-header"><span class="section-title">⚙️ Panel Administrador</span></div>
+      <div class="section-header"><span class="section-title">Panel de administración</span></div>
       <div id="adminContent"><div class="spinner"></div></div>
     </div>
 
@@ -517,7 +609,7 @@
 <!-- Modal: Ver producto -->
 <div id="modalProduct" class="modal-overlay hidden" onclick="closeModalProduct(event)">
   <div class="modal">
-    <button class="modal-close" onclick="closeModal('modalProduct')">✕</button>
+    <button class="modal-close" aria-label="Cerrar" onclick="closeModal('modalProduct')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
     <div id="modalProductContent"></div>
   </div>
 </div>
@@ -525,7 +617,7 @@
 <!-- Modal: Crear / Editar producto -->
 <div id="modalProductForm" class="modal-overlay hidden" onclick="closeModalForm(event)">
   <div class="modal" style="max-width:520px">
-    <button class="modal-close" onclick="closeModal('modalProductForm')">✕</button>
+    <button class="modal-close" aria-label="Cerrar" onclick="closeModal('modalProductForm')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
     <h3 id="productFormTitle">Nuevo producto</h3>
     <input type="hidden" id="editProductId"/>
     <div class="field"><label>Nombre del producto</label><input id="pNombre" placeholder="Ej: Buñuelo, Cuaderno…"/></div>
@@ -544,7 +636,7 @@
 <!-- Modal: Admin — Cargar saldo -->
 <div id="modalCredit" class="modal-overlay hidden" onclick="closeMCredit(event)">
   <div class="modal">
-    <button class="modal-close" onclick="closeModal('modalCredit')">✕</button>
+    <button class="modal-close" aria-label="Cerrar" onclick="closeModal('modalCredit')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
     <h3>Cargar saldo</h3>
     <div class="field"><label>Código de tarjeta del estudiante</label><input id="creditCard" placeholder="MDXXX…"/></div>
     <div class="field"><label>Cantidad de monedas</label><input id="creditAmount" type="number" min="1" placeholder="50"/></div>
@@ -556,7 +648,7 @@
 <!-- Modal: Admin — Agregar códigos -->
 <div id="modalInvites" class="modal-overlay hidden" onclick="closeMInvites(event)">
   <div class="modal">
-    <button class="modal-close" onclick="closeModal('modalInvites')">✕</button>
+    <button class="modal-close" aria-label="Cerrar" onclick="closeModal('modalInvites')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
     <h3>Generar códigos de invitación</h3>
     <div class="field"><label>Cantidad a generar (máx. 500)</label><input id="inviteCount" type="number" min="1" max="500" value="10"/></div>
     <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="doAddInvites()">Generar →</button>
@@ -568,7 +660,7 @@
   <div class="cart-panel">
     <div class="cart-header">
       <h3>Mi carrito</h3>
-      <button class="btn-icon" onclick="toggleCart(false)">✕</button>
+      <button class="btn-icon" aria-label="Cerrar carrito" onclick="toggleCart(false)"><svg class="icon-stroke" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
     </div>
     <div id="cartItems" class="cart-items"></div>
     <div class="cart-footer">
@@ -646,9 +738,9 @@ document.addEventListener("error",event=>{
   if(img.id==="pImagePreview"){img.style.display="none";return;}
   const container=img.parentElement;
   if(container&&container.classList.contains("product-img")){
-    container.textContent="Sin imagen";
+    container.outerHTML=productPlaceholderHTML();
   }else if(container&&container.classList.contains("cart-item-media")){
-    container.textContent="📦";
+    container.innerHTML='<svg class="icon-stroke" viewBox="0 0 24 24" aria-hidden="true"><path d="m4 7 8-4 8 4v10l-8 4-8-4V7Z"/><path d="m4 7 8 4 8-4M12 11v10"/></svg>';
     container.classList.add("noimg");
   }else{
     img.replaceWith(document.createTextNode("Sin imagen"));
@@ -658,6 +750,10 @@ document.addEventListener("error",event=>{
 function qs(id){return document.getElementById(id)}
 function closeModal(id){qs(id).classList.add("hidden")}
 function openModal(id){qs(id).classList.remove("hidden")}
+
+function productPlaceholderHTML(){
+  return '<div class="product-img product-placeholder"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m4 7 8-4 8 4v10l-8 4-8-4V7Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="m4 7 8 4 8-4M12 11v10" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg><span>Sin imagen</span></div>';
+}
 
 function coin(n){return n+" monedas"}
 function fmtDate(s){
@@ -784,7 +880,7 @@ function renderCart(){
   list.innerHTML = cart.map(item => `
     <div class="cart-item">
       <div class="cart-item-media ${item.image_data ? "" : "noimg"}">
-        ${item.image_data ? `<img data-fallback-image="true" src="${item.image_data}" alt="${item.nombre}">` : "📦"}
+        ${item.image_data ? `<img data-fallback-image="true" src="${item.image_data}" alt="${item.nombre}">` : '<svg class="icon-stroke" viewBox="0 0 24 24" aria-hidden="true"><path d="m4 7 8-4 8 4v10l-8 4-8-4V7Z"/><path d="m4 7 8 4 8-4M12 11v10"/></svg>'}
       </div>
       <div class="cart-item-body">
         <div>
@@ -914,7 +1010,8 @@ function showCoinmashIntro(){
   intro.classList.remove("hidden");
   intro.setAttribute("aria-hidden","false");
   qs("coinmashSkip").focus();
-  coinmashIntroTimer=setTimeout(closeCoinmashIntro,2400);
+  const duration=window.matchMedia("(prefers-reduced-motion: reduce)").matches?0:2400;
+  coinmashIntroTimer=setTimeout(closeCoinmashIntro,duration);
 }
 
 function closeCoinmashIntro(){
@@ -1031,7 +1128,7 @@ function productCardHTML(p, isPromoted=false){
   const stock=Number(p.stock)||0;
   const imgHTML=p.image_data
     ? `<div class="product-img"><img data-fallback-image="true" src="${p.image_data}" alt="${p.nombre}" loading="lazy"/></div>`
-    : `<div class="product-img">Sin imagen</div>`;
+    : productPlaceholderHTML();
   return `
   <div class="product-card${isPromoted?' promoted':''}" onclick="openProduct(${p.id})" style="position:relative">
     ${isPromoted?'<span class="promoted-tag">DESTACADO</span>':''}
@@ -1106,7 +1203,7 @@ async function loadMyProducts(){
   if(!mine.length){g.innerHTML='<p style="color:var(--muted);padding:20px">Aún no tienes productos publicados.</p>';return;}
   g.innerHTML=mine.map(p=>`
     <div class="product-card" style="position:relative">
-      ${p.image_data?`<div class="product-img"><img data-fallback-image="true" src="${p.image_data}" alt="${p.nombre}"/></div>`:'<div class="product-img">Sin imagen</div>'}
+      ${p.image_data?`<div class="product-img"><img data-fallback-image="true" src="${p.image_data}" alt="${p.nombre}"/></div>`:productPlaceholderHTML()}
       <div class="product-body">
         <div class="product-name">${p.nombre}</div>
         <div class="product-desc">${p.descripcion}</div>
@@ -1367,7 +1464,7 @@ function renderProfile(){
     </div>
     ${u.is_admin==1?`<div class="card profile-card" style="text-align:center;border-color:#f0c04055">
       <div class="profile-label">Estado</div>
-      <div class="profile-value" style="color:var(--accent)">⚙️ Administrador</div>
+      <div class="profile-value" style="color:var(--accent)">Administrador</div>
     </div>`:""}
   `;
 }
@@ -1469,7 +1566,7 @@ async function loadAdmin(){
                 <td>${coin(c.amount)}</td>
                 <td>${c.note}</td>
                 <td>${fmtDate(c.created_at)}</td>
-                <td><button class="btn btn-danger btn-sm" onclick="deleteCredit(${c.id})">✕</button></td>
+                <td><button class="btn btn-danger btn-sm" aria-label="Eliminar recarga" onclick="deleteCredit(${c.id})">Eliminar</button></td>
               </tr>`).join("")}
           </tbody>
         </table>`
