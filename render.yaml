@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: mercado-digital
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /
+    envVars:
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        value: "4000"
+      - key: DB_SSL
+        value: verify_ca
+      - key: DB_SSL_CA
+        value: /etc/ssl/certs/ca-certificates.crt
+      - key: DB_NAME
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASS
+        sync: false
+      - key: MAIL_FROM
+        sync: false
+      - key: ADMIN_SIGNUP_CODE
+        sync: false
+      - key: TEMP_SIGNUP_CODE
+        sync: false
