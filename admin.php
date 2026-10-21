@@ -98,7 +98,7 @@ if ($action === "stats" && $method === "GET") {
 if ($action === "users" && $method === "GET") {
     $adminId = intval($_GET["adminId"] ?? 0);
     requireAdmin($conn, $adminId);
-    $rows = $conn->query("SELECT u.id, u.nombre, u.curso, u.rol, u.contacto, u.monedas, u.card_code, u.is_admin, COUNT(p.id) AS product_count FROM users u LEFT JOIN products p ON p.seller_id = u.id GROUP BY u.id, u.nombre, u.curso, u.rol, u.contacto, u.monedas, u.card_code, u.is_admin ORDER BY u.nombre ASC");
+    $rows = $conn->query("SELECT u.id, u.nombre, u.curso, u.rol, u.contacto, u.monedas, u.card_code, u.is_admin, ic.code AS invite_code, COUNT(p.id) AS product_count FROM users u LEFT JOIN products p ON p.seller_id = u.id LEFT JOIN (SELECT used_by, MAX(code) AS code FROM invite_codes WHERE used_by IS NOT NULL GROUP BY used_by) ic ON ic.used_by = u.id GROUP BY u.id, u.nombre, u.curso, u.rol, u.contacto, u.monedas, u.card_code, u.is_admin, ic.code ORDER BY u.nombre ASC");
     $users = [];
     while ($r = $rows->fetch_assoc()) $users[] = $r;
     echo json_encode(["users" => $users]); exit;

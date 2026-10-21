@@ -36,6 +36,47 @@
 
   /* ── Utilities ───────────────────────────────────────────────── */
   .hidden{display:none!important}
+  .coinmash-intro{
+    position:fixed;inset:0;z-index:3000;display:grid;place-items:center;overflow:hidden;
+    background:radial-gradient(ellipse at 50% 42%,#242333 0%,#11131b 48%,#090a0f 100%);
+    animation:coinmash-fade-in .28s ease-out both
+  }
+  .coinmash-intro::before,.coinmash-intro::after{
+    content:"";position:absolute;width:340px;height:340px;border:1px solid #f0c04016;border-radius:50%;
+    animation:coinmash-orbit 12s linear infinite
+  }
+  .coinmash-intro::after{width:500px;height:500px;animation-direction:reverse}
+  .coinmash-content{position:relative;z-index:1;text-align:center;padding:28px;animation:coinmash-rise .65s cubic-bezier(.2,.8,.2,1) both}
+  .coinmash-kicker{font-size:.7rem;font-weight:700;letter-spacing:.22em;color:var(--muted);text-transform:uppercase}
+  .coinmash-emblems{height:112px;display:flex;align-items:center;justify-content:center;gap:24px;margin:8px 0}
+  .coinmash-coin{
+    width:82px;height:82px;display:grid;place-items:center;border:4px solid #ffe08a;border-radius:50%;
+    background:radial-gradient(circle at 35% 28%,#ffe58b,#e8a91a 70%);color:#583700;
+    box-shadow:0 0 46px #f0c04066,inset 0 0 0 4px #d28d0d;
+    font-family:'Syne',sans-serif;font-size:2.4rem;font-weight:800;
+    animation:coinmash-flip .75s ease-in-out 3
+  }
+  .coinmash-school-icon{font-size:2rem;filter:drop-shadow(0 5px 12px #0008);animation:coinmash-bob 1.4s ease-in-out infinite}
+  .coinmash-school-icon:last-child{animation-delay:.35s}
+  .coinmash-title{font-family:'Syne',sans-serif;font-size:clamp(2.5rem,9vw,4.5rem);font-weight:800;letter-spacing:.08em;
+    background:linear-gradient(100deg,#fff1bd 10%,var(--accent) 48%,#f28c42 90%);color:transparent;background-clip:text}
+  .coinmash-welcome{margin-top:8px;color:var(--muted);font-size:.95rem}
+  .coinmash-progress{width:min(220px,60vw);height:3px;margin:24px auto 0;border-radius:9px;background:#ffffff18;overflow:hidden}
+  .coinmash-progress span{display:block;width:100%;height:100%;background:linear-gradient(90deg,var(--accent),#f28c42);
+    transform-origin:left;animation:coinmash-progress 2.4s linear both}
+  .coinmash-skip{position:absolute;z-index:2;right:20px;top:18px;background:#ffffff0d;border:1px solid #ffffff20;
+    color:var(--text);padding:8px 13px;border-radius:8px;font-size:.8rem}
+  .coinmash-skip:hover{background:#ffffff18}
+  @keyframes coinmash-fade-in{from{opacity:0}to{opacity:1}}
+  @keyframes coinmash-rise{from{opacity:0;transform:translateY(16px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+  @keyframes coinmash-flip{0%,100%{transform:rotateY(0) scale(1)}50%{transform:rotateY(180deg) scale(1.08)}}
+  @keyframes coinmash-bob{0%,100%{transform:translateY(3px) rotate(-5deg)}50%{transform:translateY(-8px) rotate(5deg)}}
+  @keyframes coinmash-orbit{to{transform:rotate(360deg)}}
+  @keyframes coinmash-progress{to{transform:scaleX(0)}}
+  @media(prefers-reduced-motion:reduce){
+    .coinmash-intro,.coinmash-content,.coinmash-intro::before,.coinmash-intro::after,
+    .coinmash-coin,.coinmash-school-icon,.coinmash-progress span{animation:none}
+  }
   .badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:.72rem;font-weight:600;letter-spacing:.04em}
   .badge-yellow{background:#f0c04022;color:var(--accent);border:1px solid #f0c04055}
   .badge-green{background:#4caf8022;color:var(--green);border:1px solid #4caf8055}
@@ -311,6 +352,20 @@
 
 <!-- ══ TOAST ══════════════════════════════════════════════════════ -->
 <div id="toast"></div>
+<div id="coinmashIntro" class="coinmash-intro hidden" role="dialog" aria-modal="true" aria-labelledby="coinmashTitle" aria-hidden="true">
+  <button id="coinmashSkip" class="coinmash-skip" type="button" onclick="closeCoinmashIntro()">Saltar</button>
+  <div class="coinmash-content">
+    <div class="coinmash-kicker">Tu mercado escolar</div>
+    <div class="coinmash-emblems" aria-hidden="true">
+      <span class="coinmash-school-icon">📚</span>
+      <span class="coinmash-coin">M</span>
+      <span class="coinmash-school-icon">✏️</span>
+    </div>
+    <h1 id="coinmashTitle" class="coinmash-title">COINMASH</h1>
+    <p id="coinmashWelcome" class="coinmash-welcome">Preparando tu mercado…</p>
+    <div class="coinmash-progress" aria-hidden="true"><span></span></div>
+  </div>
+</div>
 
 <!-- ══ AUTH PAGE ══════════════════════════════════════════════════ -->
 <div id="authPage">
@@ -555,6 +610,7 @@ let allProducts = [];
 let adminUsers = [];
 let adminProducts = [];
 let cart = [];
+let coinmashIntroTimer = null;
 
 /* ════════════════════════════════════════════════════════════════
    HELPERS
@@ -849,9 +905,31 @@ function loginSuccess(user){
   currentUser=user;
   localStorage.setItem("mdUser",JSON.stringify(user));
   startApp();
+  showCoinmashIntro();
+}
+
+function showCoinmashIntro(){
+  const intro=qs("coinmashIntro");
+  qs("coinmashWelcome").textContent="¡Hola, "+currentUser.nombre+"! Tu mercado escolar te espera.";
+  intro.classList.remove("hidden");
+  intro.setAttribute("aria-hidden","false");
+  qs("coinmashSkip").focus();
+  coinmashIntroTimer=setTimeout(closeCoinmashIntro,2400);
+}
+
+function closeCoinmashIntro(){
+  if(coinmashIntroTimer){
+    clearTimeout(coinmashIntroTimer);
+    coinmashIntroTimer=null;
+  }
+  const intro=qs("coinmashIntro");
+  if(!intro)return;
+  intro.classList.add("hidden");
+  intro.setAttribute("aria-hidden","true");
 }
 
 function doLogout(){
+  closeCoinmashIntro();
   currentUser=null;
   cart=[];
   localStorage.removeItem("mdUser");
@@ -1368,11 +1446,11 @@ async function loadAdmin(){
     <div class="admin-section">
       <div style="display:flex;justify-content:space-between;gap:14px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
         <h3 style="margin:0">Usuarios registrados</h3>
-        <input id="adminUserSearch" type="search" placeholder="Buscar por nombre, curso o contacto" oninput="filterAdminUsers()" style="max-width:330px"/>
+        <input id="adminUserSearch" type="search" placeholder="Buscar por nombre, curso, contacto o código" oninput="filterAdminUsers()" style="max-width:360px"/>
       </div>
       <div style="overflow-x:auto">
         <table>
-          <thead><tr><th>Nombre</th><th>Curso</th><th>Rol</th><th>Contacto</th><th>Saldo</th><th>Productos</th><th>Acciones</th></tr></thead>
+          <thead><tr><th>Nombre</th><th>Curso</th><th>Rol</th><th>Contacto</th><th>Código utilizado</th><th>Saldo</th><th>Productos</th><th>Acciones</th></tr></thead>
           <tbody id="adminUsersList"></tbody>
         </table>
       </div>
@@ -1476,7 +1554,7 @@ function renderAdminUsers(users){
   const list=qs("adminUsersList");
   if(!list)return;
   if(!users.length){
-    list.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--muted)">No se encontraron usuarios.</td></tr>';
+    list.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--muted)">No se encontraron usuarios.</td></tr>';
     return;
   }
   list.innerHTML=users.map(u=>{
@@ -1489,6 +1567,7 @@ function renderAdminUsers(users){
       +'<td>'+u.curso+'</td>'
       +'<td>'+u.rol+'</td>'
       +'<td>'+u.contacto+'</td>'
+      +'<td>'+(u.invite_code||'<span style="color:var(--muted)">Temporal / no guardado</span>')+'</td>'
       +'<td>'+coin(u.monedas)+'</td>'
       +'<td>'+u.product_count+'</td>'
       +'<td style="white-space:nowrap"><button class="btn btn-secondary btn-sm" onclick="changeUserPassword('+u.id+')">Contraseña</button> '+deletion+'</td>'
@@ -1499,7 +1578,7 @@ function renderAdminUsers(users){
 function filterAdminUsers(){
   const query=qs("adminUserSearch").value.trim().toLowerCase();
   const filtered=adminUsers.filter(u=>
-    [u.nombre,u.curso,u.rol,u.contacto,u.card_code].some(value=>
+    [u.nombre,u.curso,u.rol,u.contacto,u.card_code,u.invite_code].some(value=>
       String(value||"").toLowerCase().includes(query)
     )
   );
