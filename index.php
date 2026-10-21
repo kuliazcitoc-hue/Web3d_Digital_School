@@ -703,6 +703,9 @@ let adminUsers = [];
 let adminProducts = [];
 let cart = [];
 let coinmashIntroTimer = null;
+let preparedImageFile = null;
+let preparedImageData = null;
+let imagePreparationPromise = null;
 
 /* ════════════════════════════════════════════════════════════════
    HELPERS
@@ -1224,19 +1227,26 @@ async function loadMyProducts(){
 function openProductModal(editId=null){
   qs("editProductId").value=editId||"";
   qs("productFormTitle").textContent=editId?"Editar producto":"Nuevo producto";
+  qs("pImagen").value="";
+  preparedImageFile=null;
+  preparedImageData=null;
+  imagePreparationPromise=null;
   if(!editId){
     ["pNombre","pDesc","pPrecio","pStock"].forEach(id=>qs(id).value="");
     qs("pImagePreview").style.display="none";
+    qs("pImagePreview").removeAttribute("src");
   } else {
-    api(API.products).then(res=>{
+    api(API.products+"?sellerId="+currentUser.id).then(res=>{
+      if(res.error){toast(res.error,"err");return;}
       const p=(res.products||[]).find(x=>x.id==editId);
-      if(!p)return;
+      if(!p){toast("No se pudo cargar el producto para editar.","err");return;}
+      if(Number(qs("editProductId").value)!==Number(editId))return;
       qs("pNombre").value=p.nombre;
       qs("pDesc").value=p.descripcion;
       qs("pPrecio").value=p.precio;
       qs("pStock").value=p.stock;
       if(p.image_data){qs("pImagePreview").src=p.image_data;qs("pImagePreview").style.display="block";}
-      else qs("pImagePreview").style.display="none";
+      else{qs("pImagePreview").removeAttribute("src");qs("pImagePreview").style.display="none";}
     });
   }
   openModal("modalProductForm");
@@ -1245,33 +1255,53 @@ function openProductModal(editId=null){
 function closeModalForm(e){if(e.target.id==="modalProductForm")closeModal("modalProductForm")}
 
 function compressImage(file, maxPx, quality){
-  return new Promise(resolve=>{
+  return new Promise((resolve,reject)=>{
     const r=new FileReader();
     r.onload=e=>{
       const img=new Image();
       img.onload=()=>{
-        let w=img.width, h=img.height;
-        if(w>maxPx||h>maxPx){
-          if(w>h){h=Math.round(h*maxPx/w);w=maxPx;}
-          else{w=Math.round(w*maxPx/h);h=maxPx;}
+        try{
+          let w=img.width, h=img.height;
+          if(w>maxPx||h>maxPx){
+            if(w>h){h=Math.round(h*maxPx/w);w=maxPx;}
+            else{w=Math.round(w*maxPx/h);h=maxPx;}
+          }
+          const canvas=document.createElement("canvas");
+          canvas.width=w; canvas.height=h;
+          const context=canvas.getContext("2d");
+          if(!context){reject(new Error("No se pudo preparar la imagen."));return;}
+          context.drawImage(img,0,0,w,h);
+          resolve(canvas.toDataURL("image/jpeg", quality));
+        }catch(error){
+          reject(error);
         }
-        const canvas=document.createElement("canvas");
-        canvas.width=w; canvas.height=h;
-        canvas.getContext("2d").drawImage(img,0,0,w,h);
-        resolve(canvas.toDataURL("image/jpeg", quality));
       };
+      img.onerror=()=>reject(new Error("El archivo de imagen no se pudo leer."));
       img.src=e.target.result;
     };
+    r.onerror=()=>reject(new Error("No se pudo leer el archivo de imagen."));
     r.readAsDataURL(file);
   });
 }
 
 function previewImage(input){
   const file=input.files[0];
-  if(!file)return;
-  compressImage(file, 800, 0.75).then(dataUrl=>{
+  if(!file){preparedImageFile=null;preparedImageData=null;imagePreparationPromise=null;return;}
+  preparedImageFile=file;
+  preparedImageData=null;
+  imagePreparationPromise=compressImage(file, 800, 0.75).then(dataUrl=>{
+    if(preparedImageFile!==file)return null;
+    preparedImageData=dataUrl;
     qs("pImagePreview").src=dataUrl;
     qs("pImagePreview").style.display="block";
+    return dataUrl;
+  }).catch(error=>{
+    if(preparedImageFile===file){
+      preparedImageData=null;
+      qs("pImagePreview").style.display="none";
+    }
+    toast(error.message||"No se pudo preparar la imagen.","err");
+    return null;
   });
 }
 
@@ -1283,10 +1313,22 @@ async function saveProduct(){
   const stock=parseInt(qs("pStock").value)||0;
   const imgEl=qs("pImagen");
   let imageData=null;
-  if(imgEl.files&&imgEl.files[0]){
-    imageData=await compressImage(imgEl.files[0], 800, 0.75);
-  } else if(qs("pImagePreview").src&&qs("pImagePreview").style.display!=="none"){
-    imageData=qs("pImagePreview").src;
+  const selectedFile=imgEl.files&&imgEl.files[0];
+  try{
+    if(selectedFile){
+      if(preparedImageFile===selectedFile&&imagePreparationPromise){
+        imageData=preparedImageData||await imagePreparationPromise;
+      }else{
+        imageData=await compressImage(selectedFile,800,0.75);
+      }
+      if(!imageData){toast("No se pudo preparar la foto. Intenta seleccionarla otra vez.","err");return;}
+    } else if(qs("pImagePreview").src&&qs("pImagePreview").style.display!=="none"){
+      imageData=qs("pImagePreview").src;
+    }
+  }catch(error){
+    console.error("No se pudo preparar la foto del producto:",error);
+    toast("No se pudo preparar la foto. Intenta seleccionarla otra vez.","err");
+    return;
   }
   if(!nombre||!descripcion||precio<1||stock<1){toast("Completa los campos y agrega al menos una unidad al stock","err");return;}
   const body={sellerId:currentUser.id,nombre,descripcion,precio,stock,imageData};
@@ -1297,9 +1339,18 @@ async function saveProduct(){
     res=await api(API.products,"POST",body);
   }
   if(res.error){toast(res.error,"err");return;}
+  if(imageData&&(!res.product||res.product.image_data!==imageData)){
+    toast("El producto se guardó, pero el servidor no confirmó la foto. Intenta subirla de nuevo.","err");
+  }
   closeModal("modalProductForm");
-  toast(editId?"Producto actualizado.":"Producto publicado.");
-  loadMyProducts();
+  if(!imageData||res.product?.image_data===imageData){
+    toast(editId?"Producto actualizado.":"Producto publicado.");
+  }
+  qs("pImagen").value="";
+  preparedImageFile=null;
+  preparedImageData=null;
+  imagePreparationPromise=null;
+  await Promise.all([loadMyProducts(),loadProducts()]);
 }
 
 async function deleteProduct(id){
