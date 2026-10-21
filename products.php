@@ -61,7 +61,7 @@ if ($method === "POST" && !$id) {
     }
     $now = date("Y-m-d H:i:s");
     $stmt = $conn->prepare("INSERT INTO products (seller_id, nombre, descripcion, precio, stock, image_data, is_active, promoted_until, created_at) VALUES (?, ?, ?, ?, ?, ?, 1, NULL, ?)");
-    $stmt->bind_param("issiiis", $sellerId, $nombre, $descripcion, $precio, $stock, $imageData, $now);
+    $stmt->bind_param("issiiss", $sellerId, $nombre, $descripcion, $precio, $stock, $imageData, $now);
     $stmt->execute();
     $newId = $conn->insert_id;
     $stmt = $conn->prepare("SELECT * FROM products WHERE id = ?");
