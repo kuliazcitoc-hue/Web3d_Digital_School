@@ -1,15 +1,30 @@
-# Configurar correo de recuperación en XAMPP
+# Configurar el correo de recuperación de contraseña
 
-La aplicación usa el `sendmail.exe` incluido en XAMPP y Gmail por SMTP TLS. En esta instalación, la URL de la aplicación es `http://localhost/mercado_digital`; `mail_config.php` la usa para construir los enlaces de recuperación.
+La aplicación envía el correo de recuperación mediante SMTP con PHPMailer. En Render, las credenciales se configuran como variables de entorno; nunca las guardes en el repositorio.
 
-1. En la cuenta Gmail que enviará los mensajes, activa la verificación en dos pasos.
-2. Crea una contraseña de aplicación desde la sección **Contraseñas de aplicaciones** de la cuenta de Google. Usa esa contraseña, no la contraseña normal de Gmail.
-3. Abre `C:\xampp\sendmail\sendmail.ini` y reemplaza `TU_CORREO@gmail.com` por el correo remitente y `PEGA_AQUI_LA_CONTRASENA_DE_APLICACION` por la contraseña de aplicación. Pégala sin espacios.
-4. Abre `C:\xampp\php\php.ini` y reemplaza `TU_CORREO@gmail.com` en `sendmail_from` por el mismo remitente.
-5. Abre `mail_config.php` del proyecto y reemplaza `TU_CORREO@gmail.com` en `MAIL_FROM` por el mismo remitente.
-6. En el panel de XAMPP, detén y vuelve a iniciar Apache para que lea `php.ini`.
-7. Solicita una recuperación para una cuenta cuyo email esté guardado en `users.email`.
+## Gmail en Render
 
-La configuración SMTP usa `smtp.gmail.com`, puerto `587` y TLS. Los errores de entrega se registran en `C:\xampp\sendmail\error.log`. No compartas la contraseña de aplicación ni la publiques en el proyecto.
+1. En la cuenta remitente de Google, activa la verificación en dos pasos y crea una contraseña de aplicación. No uses la contraseña normal de Gmail.
+2. En Render, abre el servicio y entra a **Environment**. Configura:
 
-Si Google no permite crear contraseñas de aplicación para la cuenta (por ejemplo, por políticas de una cuenta escolar), se necesita usar un proveedor SMTP autorizado por esa organización.
+   | Variable | Valor |
+   | --- | --- |
+   | `MAIL_TRANSPORT` | `smtp` |
+   | `SMTP_HOST` | `smtp.gmail.com` |
+   | `SMTP_PORT` | `587` |
+   | `SMTP_SECURE` | `tls` |
+   | `SMTP_USER` | Correo completo de Gmail remitente |
+   | `SMTP_PASS` | Contraseña de aplicación de Google |
+   | `MAIL_FROM` | El mismo correo remitente |
+   | `MAIL_FROM_NAME` | `Mercado Digital` |
+
+3. Guarda los cambios y espera a que Render complete el redeploy.
+4. Solicita la recuperación de contraseña para una cuenta cuyo correo exista en `users.email`.
+
+PHPMailer valida el certificado TLS del servidor SMTP de forma predeterminada. Para revisar fallos de entrega, abre los logs del servicio en Render. La API responde con el mismo mensaje tanto si el correo existe como si no, para no revelar qué cuentas están registradas.
+
+## Desarrollo local con XAMPP
+
+Para usar el mismo SMTP localmente, define las variables anteriores para Apache/PHP y reinicia Apache. No guardes la contraseña de aplicación en un archivo del proyecto. Si `MAIL_TRANSPORT` no está definido, el código conserva el envío local de PHP `mail()`.
+
+Si Google no permite contraseñas de aplicación para la cuenta, usa las credenciales SMTP de un proveedor autorizado y configura su host, puerto, usuario y contraseña en las mismas variables. No desactives la verificación TLS del servidor.

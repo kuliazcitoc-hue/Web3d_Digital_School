@@ -42,10 +42,7 @@ if ($action === "request") {
         $resetUrl = rtrim(APP_BASE_URL, "/") . "/index.php?token=" . urlencode($token);
         $subject = "Recuperación de contraseña | Mercado Digital";
         $message = "Hola,\n\nRecibimos una solicitud para cambiar la contraseña de tu cuenta. Abre este enlace dentro de la próxima hora:\n\n" . $resetUrl . "\n\nSi no solicitaste este cambio, ignora este correo.\n";
-        $headers = "From: " . MAIL_FROM . "\r\n" . "Content-Type: text/plain; charset=UTF-8\r\n";
-        if (!@mail($email, $subject, $message, $headers)) {
-            error_log("No se pudo enviar el correo de recuperación para usuario " . $userId);
-        }
+        sendAppEmail($email, $subject, $message);
     }
 
     echo json_encode(["message" => "Si el correo está registrado, recibirás un enlace para cambiar tu contraseña."]);

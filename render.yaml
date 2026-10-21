@@ -23,6 +23,20 @@ services:
         sync: false
       - key: MAIL_FROM
         sync: false
+      - key: MAIL_FROM_NAME
+        value: Mercado Digital
+      - key: MAIL_TRANSPORT
+        value: smtp
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: SMTP_SECURE
+        value: tls
       - key: ADMIN_SIGNUP_CODE
         sync: false
       - key: TEMP_SIGNUP_CODE
