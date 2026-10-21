@@ -26,17 +26,9 @@ services:
       - key: MAIL_FROM_NAME
         value: Mercado Digital
       - key: MAIL_TRANSPORT
-        value: smtp
-      - key: SMTP_HOST
+        value: brevo
+      - key: BREVO_API_KEY
         sync: false
-      - key: SMTP_PORT
-        value: "587"
-      - key: SMTP_USER
-        sync: false
-      - key: SMTP_PASS
-        sync: false
-      - key: SMTP_SECURE
-        value: tls
       - key: ADMIN_SIGNUP_CODE
         sync: false
       - key: TEMP_SIGNUP_CODE

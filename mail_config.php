@@ -7,6 +7,54 @@ function sendAppEmail(string $recipient, string $subject, string $message): bool
 {
     $transport = getenv("MAIL_TRANSPORT") ?: "mail";
 
+    if ($transport === "brevo") {
+        $apiKey = getenv("BREVO_API_KEY") ?: "";
+        if (!$apiKey) {
+            error_log("Brevo email configuration is incomplete.");
+            return false;
+        }
+
+        $payload = json_encode([
+            "sender" => ["name" => MAIL_FROM_NAME, "email" => MAIL_FROM],
+            "to" => [["email" => $recipient]],
+            "subject" => $subject,
+            "textContent" => $message,
+        ]);
+        if ($payload === false) {
+            error_log("Could not encode the Brevo email request.");
+            return false;
+        }
+
+        $context = stream_context_create([
+            "http" => [
+                "method" => "POST",
+                "header" => "accept: application/json\r\n"
+                    . "api-key: " . $apiKey . "\r\n"
+                    . "content-type: application/json\r\n",
+                "content" => $payload,
+                "timeout" => 15,
+                "ignore_errors" => true,
+                "follow_location" => 0,
+                "max_redirects" => 0,
+            ],
+        ]);
+        $response = @file_get_contents("https://api.brevo.com/v3/smtp/email", false, $context);
+        $status = 0;
+        foreach ($http_response_header ?? [] as $header) {
+            if (preg_match("/^HTTP\\/\\S+\\s+(\\d{3})/", $header, $matches)) {
+                $status = (int)$matches[1];
+                break;
+            }
+        }
+
+        if ($response === false || $status < 200 || $status >= 300) {
+            error_log("Brevo email delivery failed (HTTP " . $status . ").");
+            return false;
+        }
+
+        return true;
+    }
+
     if ($transport === "mail") {
         $headers = "From: " . MAIL_FROM . "\r\n"
             . "Content-Type: text/plain; charset=UTF-8\r\n";
