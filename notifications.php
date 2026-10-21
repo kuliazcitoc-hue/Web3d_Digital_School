@@ -44,8 +44,13 @@ if ($method === "POST" && ($_GET["action"] ?? "") === "read_purchases") {
         http_response_code(404); echo json_encode(["error" => "Usuario no encontrado"]); exit;
     }
 
-    $stmt = $conn->prepare("UPDATE users SET last_purchase_seen_id = COALESCE((SELECT MAX(id) FROM purchases WHERE buyer_id = ? OR seller_id = ?), 0) WHERE id = ?");
-    $stmt->bind_param("iii", $userId, $userId, $userId);
+    $stmt = $conn->prepare("SELECT COALESCE(MAX(id), 0) AS latest_purchase_id FROM purchases WHERE buyer_id = ? OR seller_id = ?");
+    $stmt->bind_param("ii", $userId, $userId);
+    $stmt->execute();
+    $latestPurchaseId = $stmt->get_result()->fetch_assoc()["latest_purchase_id"];
+
+    $stmt = $conn->prepare("UPDATE users SET last_purchase_seen_id = ? WHERE id = ?");
+    $stmt->bind_param("ii", $latestPurchaseId, $userId);
     $stmt->execute();
     echo json_encode(["ok" => true]); exit;
 }
