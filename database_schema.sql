@@ -47,6 +47,7 @@ CREATE TABLE `products` (
   `stock` int NOT NULL,
   `image_data` longtext DEFAULT NULL,
   `is_active` tinyint NOT NULL DEFAULT 1,
+  `deleted_at` datetime DEFAULT NULL,
   `promoted_until` datetime DEFAULT NULL,
   `created_at` datetime NOT NULL,
   PRIMARY KEY (`id`),

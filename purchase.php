@@ -60,7 +60,7 @@ if ($method === "POST") {
         $pid = $entry["productId"];
         $q = $entry["quantity"];
 
-        $stmt = $conn->prepare("SELECT * FROM products WHERE id = ?");
+        $stmt = $conn->prepare("SELECT * FROM products WHERE id = ? AND is_active = 1 AND deleted_at IS NULL");
         $stmt->bind_param("i", $pid); $stmt->execute();
         $product = $stmt->get_result()->fetch_assoc();
         if (!$product) { echo json_encode(["error" => "Producto no encontrado: " . $pid]); exit; }
@@ -86,14 +86,13 @@ if ($method === "POST") {
             $sellerId = intval($product["seller_id"]);
             $newStock = $product["stock"] - $qty;
 
-            if ($newStock <= 0) {
-                $stmt = $conn->prepare("UPDATE products SET stock = 0, is_active = 0 WHERE id = ?");
-                $stmt->bind_param("i", $product["id"]);
-            } else {
-                $stmt = $conn->prepare("UPDATE products SET stock = ? WHERE id = ?");
-                $stmt->bind_param("ii", $newStock, $product["id"]);
-            }
+            $stmt = $conn->prepare("UPDATE products SET stock = ?, is_active = ? WHERE id = ? AND stock >= ? AND is_active = 1 AND deleted_at IS NULL");
+            $active = $newStock > 0 ? 1 : 0;
+            $stmt->bind_param("iiii", $newStock, $active, $product["id"], $qty);
             $stmt->execute();
+            if ($stmt->affected_rows !== 1) {
+                throw new RuntimeException("Stock insuficiente para completar la compra");
+            }
 
             $stmt = $conn->prepare("UPDATE users SET monedas = monedas - ? WHERE id = ?");
             $stmt->bind_param("ii", $total, $buyerId); $stmt->execute();

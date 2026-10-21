@@ -208,6 +208,7 @@
   .product-img{width:100%;height:160px;object-fit:cover;background:var(--surface2);
     display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:2.5rem}
   .product-img img{width:100%;height:100%;object-fit:cover}
+  .mini-cart-btn:disabled{opacity:.55;cursor:not-allowed}
   .product-body{padding:14px}
   .product-name{font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;margin-bottom:4px;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -475,11 +476,11 @@
     <div class="field"><label>Nombre del producto</label><input id="pNombre" placeholder="Ej: Buñuelo, Cuaderno…"/></div>
     <div class="field"><label>Descripción</label><textarea id="pDesc" rows="3" placeholder="Describe bien tu producto"></textarea></div>
     <div class="field"><label>Precio (monedas)</label><input id="pPrecio" type="number" min="1" placeholder="10"/></div>
-    <div class="field"><label>Stock disponible</label><input id="pStock" type="number" min="0" placeholder="5"/></div>
+    <div class="field"><label>Stock disponible</label><input id="pStock" type="number" min="1" placeholder="5"/></div>
     <div class="field">
       <label>Imagen (opcional)</label>
       <input type="file" id="pImagen" accept="image/*" onchange="previewImage(this)"/>
-      <img id="pImagePreview" style="max-height:120px;margin-top:10px;border-radius:8px;display:none"/>
+      <img id="pImagePreview" data-fallback-image="true" style="max-height:120px;margin-top:10px;border-radius:8px;display:none"/>
     </div>
     <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="saveProduct()">Guardar producto</button>
   </div>
@@ -552,6 +553,7 @@ const API = {
 let currentUser = null;
 let allProducts = [];
 let adminUsers = [];
+let adminProducts = [];
 let cart = [];
 
 /* ════════════════════════════════════════════════════════════════
@@ -581,6 +583,21 @@ async function api(url, method="GET", body=null){
     return {error:"No se pudo conectar. ¿Está corriendo XAMPP y Apache?"};
   }
 }
+
+document.addEventListener("error",event=>{
+  const img=event.target;
+  if(!(img instanceof HTMLImageElement)||!img.dataset.fallbackImage)return;
+  if(img.id==="pImagePreview"){img.style.display="none";return;}
+  const container=img.parentElement;
+  if(container&&container.classList.contains("product-img")){
+    container.textContent="Sin imagen";
+  }else if(container&&container.classList.contains("cart-item-media")){
+    container.textContent="📦";
+    container.classList.add("noimg");
+  }else{
+    img.replaceWith(document.createTextNode("Sin imagen"));
+  }
+},true);
 
 function qs(id){return document.getElementById(id)}
 function closeModal(id){qs(id).classList.add("hidden")}
@@ -711,7 +728,7 @@ function renderCart(){
   list.innerHTML = cart.map(item => `
     <div class="cart-item">
       <div class="cart-item-media ${item.image_data ? "" : "noimg"}">
-        ${item.image_data ? `<img src="${item.image_data}" alt="${item.nombre}">` : "📦"}
+        ${item.image_data ? `<img data-fallback-image="true" src="${item.image_data}" alt="${item.nombre}">` : "📦"}
       </div>
       <div class="cart-item-body">
         <div>
@@ -933,8 +950,9 @@ function renderProductsGrid(products){
 }
 
 function productCardHTML(p, isPromoted=false){
+  const stock=Number(p.stock)||0;
   const imgHTML=p.image_data
-    ? `<div class="product-img"><img src="${p.image_data}" alt="${p.nombre}" loading="lazy"/></div>`
+    ? `<div class="product-img"><img data-fallback-image="true" src="${p.image_data}" alt="${p.nombre}" loading="lazy"/></div>`
     : `<div class="product-img">Sin imagen</div>`;
   return `
   <div class="product-card${isPromoted?' promoted':''}" onclick="openProduct(${p.id})" style="position:relative">
@@ -945,10 +963,10 @@ function productCardHTML(p, isPromoted=false){
       <div class="product-desc">${p.descripcion}</div>
       <div class="product-footer">
         <span class="product-price">${coin(p.precio)}</span>
-        <span class="product-stock">Stock: ${p.stock}</span>
+        <span class="product-stock">${stock>0?'Stock: '+stock:'Agotado'}</span>
       </div>
       <div style="font-size:.75rem;color:var(--muted);margin-top:6px">por ${p.vendedor_nombre||"—"}</div>
-      <button class="mini-cart-btn" onclick="event.stopPropagation(); addToCartById(${p.id})">Agregar al carrito</button>
+      <button class="mini-cart-btn" ${stock>0?'':'disabled'} onclick="event.stopPropagation(); addToCartById(${p.id})">${stock>0?'Agregar al carrito':'Agotado'}</button>
     </div>
   </div>`;
 }
@@ -958,7 +976,7 @@ async function openProduct(id){
   if(!product) return;
   const c=qs("modalProductContent");
   const imgHTML=product.image_data
-    ? `<img src="${product.image_data}" style="width:100%;max-height:220px;object-fit:cover;border-radius:10px;margin-bottom:16px"/>`
+    ? `<img data-fallback-image="true" src="${product.image_data}" alt="${product.nombre}" style="width:100%;max-height:220px;object-fit:cover;border-radius:10px;margin-bottom:16px"/>`
     : "";
   const canBuy=["Comprador","Ambos"].includes(currentUser.rol)&&product.stock>0&&product.seller_id!=currentUser.id;
   c.innerHTML=`
@@ -1004,19 +1022,19 @@ async function doBuy(productId){
    MIS PRODUCTOS
 ════════════════════════════════════════════════════════════════ */
 async function loadMyProducts(){
-  const res=await api(API.products);
+  const res=await api(API.products+"?sellerId="+currentUser.id);
   const mine=(res.products||[]).filter(p=>p.seller_id==currentUser.id);
   const g=qs("myProductsGrid");
   if(!mine.length){g.innerHTML='<p style="color:var(--muted);padding:20px">Aún no tienes productos publicados.</p>';return;}
   g.innerHTML=mine.map(p=>`
     <div class="product-card" style="position:relative">
-      ${p.image_data?`<div class="product-img"><img src="${p.image_data}" alt="${p.nombre}"/></div>`:'<div class="product-img">Sin imagen</div>'}
+      ${p.image_data?`<div class="product-img"><img data-fallback-image="true" src="${p.image_data}" alt="${p.nombre}"/></div>`:'<div class="product-img">Sin imagen</div>'}
       <div class="product-body">
         <div class="product-name">${p.nombre}</div>
         <div class="product-desc">${p.descripcion}</div>
         <div class="product-footer">
           <span class="product-price">${coin(p.precio)}</span>
-          <span class="product-stock">Stock: ${p.stock}</span>
+          <span class="product-stock">${p.deleted_at?'Retirado':Number(p.stock)<=0?'Agotado':Number(p.is_active)===0?'Pausado':'Publicado'} · Stock: ${p.stock}</span>
         </div>
         ${p.promoted_until&&new Date(p.promoted_until)>new Date()?'<span class="badge badge-yellow" style="margin-top:8px">Destacado hasta '+fmtDate(p.promoted_until)+'</span>'
         :`<button class="btn btn-secondary btn-sm" style="margin-top:8px;width:100%" onclick="promoteProduct(${p.id})">Destacar (10 monedas)</button>`}
@@ -1095,7 +1113,7 @@ async function saveProduct(){
   } else if(qs("pImagePreview").src&&qs("pImagePreview").style.display!=="none"){
     imageData=qs("pImagePreview").src;
   }
-  if(!nombre||!descripcion||precio<1){toast("Completa todos los campos requeridos","err");return;}
+  if(!nombre||!descripcion||precio<1||stock<1){toast("Completa los campos y agrega al menos una unidad al stock","err");return;}
   const body={sellerId:currentUser.id,nombre,descripcion,precio,stock,imageData};
   let res;
   if(editId){
@@ -1110,10 +1128,10 @@ async function saveProduct(){
 }
 
 async function deleteProduct(id){
-  if(!confirm("¿Eliminar este producto?"))return;
+  if(!confirm("¿Retirar este producto del mercado? Se conservará en el historial de compras."))return;
   const res=await api(API.products+"?id="+id,"DELETE",{sellerId:currentUser.id});
   if(res.error){toast(res.error,"err");return;}
-  toast("Producto eliminado");
+  toast("Producto retirado del mercado");
   loadMyProducts();
 }
 
@@ -1281,15 +1299,21 @@ function renderProfile(){
 ════════════════════════════════════════════════════════════════ */
 async function loadAdmin(){
   if(currentUser.is_admin!=1){qs("adminContent").innerHTML='<p style="color:var(--red)">No autorizado.</p>';return;}
-  const [stats,commissions,credits,invites,promoted,users]=await Promise.all([
+  const [stats,commissions,credits,invites,promoted,users,products]=await Promise.all([
     api(API.admin+"?action=stats&adminId="+currentUser.id),
     api(API.admin+"?action=commissions&adminId="+currentUser.id),
     api(API.admin+"?action=credits&adminId="+currentUser.id),
     api(API.admin+"?action=invites&adminId="+currentUser.id),
     api(API.admin+"?action=promoted&adminId="+currentUser.id),
     api(API.admin+"?action=users&adminId="+currentUser.id),
+    api(API.admin+"?action=products&adminId="+currentUser.id),
   ]);
+  if(products.error){
+    qs("adminContent").innerHTML='<p style="color:var(--red)">No se pudo cargar el inventario de productos: '+products.error+'</p>';
+    return;
+  }
   adminUsers=users.users||[];
+  adminProducts=products.products||[];
 
   qs("adminContent").innerHTML=`
     <!-- Stats -->
@@ -1307,6 +1331,26 @@ async function loadAdmin(){
         <button class="btn btn-primary" onclick="openModal('modalCredit')">Cargar saldo</button>
         <button class="btn btn-secondary" onclick="openModal('modalInvites')">Generar invitaciones</button>
         <button class="btn btn-danger" onclick="doReset()">Reinicio total</button>
+      </div>
+    </div>
+
+    <!-- Inventario completo -->
+    <div class="admin-section">
+      <div style="display:flex;justify-content:space-between;gap:14px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
+        <h3 style="margin:0">Productos e inventario</h3>
+        <select id="adminProductFilter" onchange="filterAdminProducts()" style="max-width:220px">
+          <option value="">Todos los estados</option>
+          <option value="Publicado">En el mercado</option>
+          <option value="Agotado">Agotados</option>
+          <option value="Pausado">Pausados</option>
+          <option value="Retirado">Retirados</option>
+        </select>
+      </div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead><tr><th>Producto</th><th>Vendedor</th><th>Estado</th><th>Stock</th><th>Precio</th><th>Acciones</th></tr></thead>
+          <tbody id="adminProductsList"></tbody>
+        </table>
       </div>
     </div>
 
@@ -1373,6 +1417,59 @@ async function loadAdmin(){
     </div>
   `;
   renderAdminUsers(adminUsers);
+  renderAdminProducts(adminProducts);
+}
+
+function renderAdminProducts(products){
+  const list=qs("adminProductsList");
+  if(!list)return;
+  if(!products.length){
+    list.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--muted)">No hay productos registrados.</td></tr>';
+    return;
+  }
+  list.innerHTML=products.map(p=>{
+    const statusBadge=p.estado==="Publicado"?"badge-green":p.estado==="Retirado"?"badge-red":p.estado==="Agotado"?"badge-yellow":"badge-blue";
+    const action=p.estado==="Retirado"
+      ?'<span style="color:var(--muted)">Sin acciones</span>'
+      :'<button class="btn btn-danger btn-sm" onclick="adminDeleteProduct('+p.id+')">Retirar</button>';
+    return '<tr data-status="'+p.estado+'">'
+      +'<td>'+p.nombre+'</td>'
+      +'<td>'+p.vendedor_nombre+'</td>'
+      +'<td><span class="badge '+statusBadge+'">'+p.estado+'</span></td>'
+      +'<td>'+p.stock+'</td>'
+      +'<td>'+coin(p.precio)+'</td>'
+      +'<td style="white-space:nowrap">'+action+'</td>'
+      +'</tr>';
+  }).join("");
+  filterAdminProducts();
+}
+
+function filterAdminProducts(){
+  const filter=qs("adminProductFilter");
+  const status=filter?filter.value:"";
+  const rows=[...document.querySelectorAll("#adminProductsList tr[data-status]")];
+  rows.forEach(row=>{
+    row.classList.toggle("hidden",!!status&&row.dataset.status!==status);
+  });
+  const visible=rows.some(row=>!row.classList.contains("hidden"));
+  let empty=qs("adminProductsEmpty");
+  if(!empty){
+    empty=document.createElement("tr");
+    empty.id="adminProductsEmpty";
+    empty.innerHTML='<td colspan="6" style="text-align:center;color:var(--muted)">No hay productos con ese estado.</td>';
+    qs("adminProductsList").appendChild(empty);
+  }
+  empty.classList.toggle("hidden",visible);
+}
+
+async function adminDeleteProduct(productId){
+  const product=adminProducts.find(p=>Number(p.id)===Number(productId));
+  if(!product)return;
+  if(!confirm("¿Retirar «"+product.nombre+"» del mercado? Se conservará el registro y el historial de compras."))return;
+  const res=await api(API.admin+"?action=delete_product","POST",{adminId:currentUser.id,productId});
+  if(res.error){toast(res.error,"err");return;}
+  toast("Producto retirado del mercado.");
+  loadAdmin();
 }
 
 function renderAdminUsers(users){

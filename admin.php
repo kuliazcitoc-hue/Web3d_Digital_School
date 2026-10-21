@@ -63,6 +63,29 @@ if ($action === "promoted" && $method === "GET") {
     echo json_encode(["products" => $products]); exit;
 }
 
+// ── Productos e inventario ──────────────────────────────────────────────────
+if ($action === "products" && $method === "GET") {
+    $adminId = intval($_GET["adminId"] ?? 0);
+    requireAdmin($conn, $adminId);
+    $rows = $conn->query("SELECT p.id, p.nombre, p.descripcion, p.precio, p.stock, p.is_active, p.deleted_at, p.created_at, u.nombre AS vendedor_nombre, CASE WHEN p.deleted_at IS NOT NULL THEN 'Retirado' WHEN p.stock <= 0 THEN 'Agotado' WHEN p.is_active = 0 THEN 'Pausado' ELSE 'Publicado' END AS estado FROM products p JOIN users u ON u.id = p.seller_id ORDER BY p.created_at DESC");
+    $products = [];
+    while ($r = $rows->fetch_assoc()) $products[] = $r;
+    echo json_encode(["products" => $products]); exit;
+}
+
+if ($action === "delete_product" && $method === "POST") {
+    $data = json_decode(file_get_contents("php://input"), true);
+    $adminId = intval($data["adminId"] ?? 0);
+    $productId = intval($data["productId"] ?? 0);
+    requireAdmin($conn, $adminId);
+    if (!$productId) { http_response_code(400); echo json_encode(["error" => "Falta el producto"]); exit; }
+    $stmt = $conn->prepare("UPDATE products SET is_active = 0, deleted_at = COALESCE(deleted_at, NOW()) WHERE id = ?");
+    $stmt->bind_param("i", $productId);
+    $stmt->execute();
+    if ($stmt->affected_rows < 1) { http_response_code(404); echo json_encode(["error" => "Producto no encontrado o ya retirado"]); exit; }
+    echo json_encode(["ok" => true]); exit;
+}
+
 // ── Stats ─────────────────────────────────────────────────────────────────────
 if ($action === "stats" && $method === "GET") {
     $adminId = intval($_GET["adminId"] ?? 0);
