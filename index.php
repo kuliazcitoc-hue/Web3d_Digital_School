@@ -230,8 +230,12 @@
   .nav-btn{background:none;border:1px solid transparent;color:var(--muted);padding:9px 13px;
     border-radius:10px;font-size:.82rem;font-weight:600;font-family:'DM Sans',sans-serif;
     transition:color .18s,background-color .18s,border-color .18s;cursor:pointer}
+  .nav-btn{position:relative}
   .nav-btn:hover{color:var(--text);background:#ffffff08}
   .nav-btn.active{color:var(--accent);background:#f4c95d12;border-color:#f4c95d22}
+  .nav-notification,.chat-unread-badge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:#e14f5a;color:#fff;font:700 .66rem/1 'DM Sans',sans-serif;box-shadow:0 2px 8px #e14f5a44}
+  .nav-notification{position:absolute;top:1px;right:2px}
+  .chat-unread-badge{margin-left:auto}
   .topbar-right{display:flex;align-items:center;gap:12px}
   .coin-badge{background:linear-gradient(135deg,#f4c95d18,#eb97520d);border:1px solid #f4c95d36;color:var(--accent);
     padding:8px 13px;border-radius:12px;font-size:.82rem;font-weight:700;
@@ -361,15 +365,25 @@
   .chat-item.active{border-color:#f0c04066;background:#f0c04012}
   .chat-item-title{font-weight:700;font-size:.84rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .chat-item-meta{margin-top:4px;color:var(--muted);font-size:.73rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .chat-item-top{display:flex;align-items:center;gap:8px;min-width:0}
+  .chat-item-top .chat-item-title{flex:1;min-width:0}
   .chat-box{display:flex;flex-direction:column;min-height:430px;overflow:hidden}
   .chat-header{padding:15px 18px;border-bottom:1px solid var(--border);font-family:'Syne',sans-serif;font-size:.9rem;font-weight:700}
   .chat-messages{flex:1;min-height:300px;padding:18px;display:flex;flex-direction:column;gap:10px;overflow-y:auto;background:rgba(255,255,255,.012)}
   .msg{max-width:min(75%,520px);padding:10px 13px;border-radius:12px;font-size:.82rem;line-height:1.4;overflow-wrap:anywhere}
   .msg.me{align-self:flex-end;background:var(--accent);color:#111;border-bottom-right-radius:4px}
   .msg.them{align-self:flex-start;background:var(--surface2);border:1px solid var(--border);border-bottom-left-radius:4px}
+  .msg-text{white-space:pre-wrap;overflow-wrap:anywhere}
+  .msg-image{display:block;width:min(100%,300px);max-height:320px;object-fit:contain;border-radius:8px;margin-top:7px}
   .chat-input{display:flex;gap:10px;padding:12px;border-top:1px solid var(--border)}
   .chat-input input{min-width:0}
   .chat-input .btn{flex:0 0 auto}
+  .chat-attach{display:grid;place-items:center;flex:0 0 42px;height:42px;margin:0;border:1px solid var(--border);border-radius:10px;color:var(--muted);cursor:pointer;transition:color .18s,border-color .18s,background-color .18s}
+  .chat-attach:hover{color:var(--accent);border-color:#f4c95d55;background:#f4c95d0c}
+  .chat-attach svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+  .chat-image-preview{display:flex;align-items:center;gap:10px;padding:10px 14px;color:var(--muted);font-size:.78rem}
+  .chat-image-preview img{width:58px;height:58px;object-fit:cover;border-radius:8px;border:1px solid var(--border)}
+  .chat-image-preview button{margin-left:auto;background:none;color:var(--red);padding:8px}
   .chat-empty{padding:24px;color:var(--muted);text-align:center;font-size:.84rem}
   .nav-btn,.mini-cart-btn,.cart-toggle,.qty-box button,.cart-remove{touch-action:manipulation}
 
@@ -515,8 +529,8 @@
     <nav class="topbar-nav">
       <button class="nav-btn active" onclick="showSection('market')">Mercado</button>
       <button class="nav-btn" onclick="showSection('myProducts')" id="navMyProducts">Mis productos</button>
-      <button class="nav-btn" onclick="showSection('purchases')">Historial</button>
-      <button class="nav-btn" onclick="showSection('chat')">Chat</button>
+      <button class="nav-btn" id="navPurchases" onclick="showSection('purchases')">Historial<span id="purchasesBadge" class="nav-notification hidden" aria-hidden="true"></span></button>
+      <button class="nav-btn" id="navChat" onclick="showSection('chat')">Chat<span id="chatBadge" class="nav-notification hidden" aria-hidden="true"></span></button>
       <button class="nav-btn" onclick="showSection('profile')">Perfil</button>
       <button class="nav-btn hidden" id="navAdmin" onclick="showSection('admin')">Administración</button>
     </nav>
@@ -694,6 +708,7 @@ const API = {
   chat:     "chat.php",
   user:     "user.php",
   admin:    "admin.php",
+  notifications: "notifications.php",
   passwordReset: "password_reset.php",
 };
 
@@ -706,6 +721,10 @@ let coinmashIntroTimer = null;
 let preparedImageFile = null;
 let preparedImageData = null;
 let imagePreparationPromise = null;
+let chatImageFile = null;
+let chatImageData = null;
+let chatImagePromise = null;
+let notificationTimer = null;
 
 /* ════════════════════════════════════════════════════════════════
    HELPERS
@@ -714,6 +733,31 @@ function toast(msg, type="ok"){
   const t=document.getElementById("toast");
   t.textContent=msg; t.className="show "+(type==="ok"?"ok":"err");
   clearTimeout(t._t); t._t=setTimeout(()=>t.className="",3200);
+}
+
+function escapeHTML(value){
+  return String(value??"").replace(/[&<>"']/g,char=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  })[char]);
+}
+
+function setNotificationBadge(elementId,count,label){
+  const badge=qs(elementId);
+  const button=badge?.closest("button");
+  if(!badge||!button)return;
+  const amount=Math.max(0,Number(count)||0);
+  badge.textContent=amount>99?"99+":String(amount);
+  badge.classList.toggle("hidden",amount===0);
+  badge.setAttribute("aria-hidden",amount===0?"true":"false");
+  button.setAttribute("aria-label",amount?label+" ("+amount+" notificaciones)":label);
+}
+
+async function refreshNotificationCounts(){
+  if(!currentUser)return;
+  const result=await api(API.notifications+"?action=counts&userId="+currentUser.id);
+  if(result.error){console.error("No se pudieron actualizar las notificaciones:",result.error);return;}
+  setNotificationBadge("purchasesBadge",result.purchases,"Historial");
+  setNotificationBadge("chatBadge",result.messages,"Chat");
 }
 
 async function api(url, method="GET", body=null){
@@ -931,7 +975,7 @@ async function checkoutCart(){
   updateCoinDisplay();
   toast("Compra realizada con éxito");
   loadProducts();
-  loadPurchases();
+  refreshNotificationCounts();
 }
 
 /* ════════════════════════════════════════════════════════════════
@@ -1030,6 +1074,7 @@ function closeCoinmashIntro(){
 
 function doLogout(){
   closeCoinmashIntro();
+  if(notificationTimer){clearInterval(notificationTimer);notificationTimer=null;}
   currentUser=null;
   cart=[];
   localStorage.removeItem("mdUser");
@@ -1055,6 +1100,9 @@ function startApp(){
   // Admin nav
   if(currentUser.is_admin==1) qs("navAdmin").classList.remove("hidden");
 
+  refreshNotificationCounts();
+  if(notificationTimer)clearInterval(notificationTimer);
+  notificationTimer=setInterval(refreshNotificationCounts,30000);
   showSection("market");
 }
 
@@ -1194,6 +1242,7 @@ async function doBuy(productId){
   closeModal("modalProduct");
   toast("Compra realizada.");
   loadProducts();
+  refreshNotificationCounts();
 }
 
 /* ════════════════════════════════════════════════════════════════
@@ -1377,6 +1426,9 @@ async function promoteProduct(id){
    HISTORIAL
 ════════════════════════════════════════════════════════════════ */
 async function loadPurchases(){
+  const markRead=await api(API.notifications+"?action=read_purchases","POST",{userId:currentUser.id});
+  if(markRead.error)toast("No se pudo marcar el historial como visto: "+markRead.error,"err");
+  else refreshNotificationCounts();
   const res=await api(API.purchase+"?userId="+currentUser.id);
   const purchases=res.purchases||[];
   const el=qs("purchasesList");
@@ -1404,12 +1456,14 @@ let activeConversationId = null;
 
 async function loadConversations(){
   const res = await api("chat.php?userId=" + currentUser.id);
+  if(res.error){toast(res.error,"err");return;}
   const conversations = res.conversations || [];
   chatConversations = conversations;
   const chatSection = qs("chatSection");
 
   if (!conversations.length) {
     chatSection.innerHTML = '<div class="chat-empty">No hay conversaciones aún. Cuando realices una compra, aparecerá el chat aquí.</div>';
+    refreshNotificationCounts();
     return;
   }
 
@@ -1421,16 +1475,24 @@ async function loadConversations(){
       <div class="chat-list">
         ${conversations.map(c => `
           <div class="chat-item ${c.id === activeConversationId ? 'active' : ''}" data-id="${c.id}" onclick="openConversation(${c.id})">
-            <div class="chat-item-title">${c.product_nombre}</div>
-            <div class="chat-item-meta">${c.buyer_id == currentUser.id ? c.seller_nombre : c.buyer_nombre}</div>
+            <div class="chat-item-top">
+              <div class="chat-item-title">${escapeHTML(c.product_nombre)}</div>
+              ${Number(c.unread_count)>0?`<span class="chat-unread-badge" aria-label="${Number(c.unread_count)} mensajes sin leer">${Number(c.unread_count)>99?"99+":Number(c.unread_count)}</span>`:""}
+            </div>
+            <div class="chat-item-meta">${escapeHTML(c.buyer_id == currentUser.id ? c.seller_nombre : c.buyer_nombre)}</div>
           </div>
         `).join('')}
       </div>
       <div class="chat-box">
         <div class="chat-header" id="chatHeader">Chat</div>
         <div class="chat-messages" id="chatMessages"></div>
+        <div id="chatImagePreview" class="chat-image-preview hidden" role="status" aria-live="polite"></div>
         <div class="chat-input">
-          <input id="chatInput" placeholder="Escribe un mensaje..." />
+          <label class="chat-attach" for="chatImageInput" title="Adjuntar foto" aria-label="Adjuntar foto">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 7-7.7 7.7a3 3 0 0 0 4.2 4.2l8.2-8.2a4.5 4.5 0 0 0-6.4-6.4l-8.5 8.5"/><path d="m8.5 15.5 8-8"/></svg>
+          </label>
+          <input id="chatImageInput" type="file" accept="image/jpeg,image/png,image/webp" hidden onchange="previewChatImage(this)"/>
+          <input id="chatInput" placeholder="Escribe un mensaje…" autocomplete="off" />
           <button class="btn btn-primary btn-sm" onclick="sendMessage()">Enviar</button>
         </div>
       </div>
@@ -1449,28 +1511,79 @@ async function openConversation(conversationId){
   chatHeader.textContent = conversation.product_nombre + " · " + (conversation.buyer_id == currentUser.id ? conversation.seller_nombre : conversation.buyer_nombre);
 
   const res = await api("chat.php?userId=" + currentUser.id + "&conversationId=" + conversationId);
+  if(res.error){toast(res.error,"err");return;}
   const messages = res.messages || [];
   const chatMessages = qs("chatMessages");
 
   chatMessages.innerHTML = messages.length ? messages.map(m => {
     const mine = m.sender_id == currentUser.id;
-    return `<div class="msg ${mine ? 'me' : 'them'}">${m.message}</div>`;
+    const text=m.message?`<div class="msg-text">${escapeHTML(m.message)}</div>`:"";
+    const image=m.image_data?`<img class="msg-image" src="${escapeHTML(m.image_data)}" alt="Foto enviada por ${escapeHTML(m.sender_nombre)}" loading="lazy"/>`:"";
+    return `<div class="msg ${mine ? 'me' : 'them'}">${text}${image}</div>`;
   }).join('') : '<div class="chat-empty">No hay mensajes aún.</div>';
 
   const list = document.querySelectorAll('.chat-item');
   list.forEach(item => item.classList.toggle('active', Number(item.dataset.id) === Number(conversationId)));
+  const conversationItem=document.querySelector('.chat-item[data-id="'+Number(conversationId)+'"] .chat-unread-badge');
+  if(conversationItem)conversationItem.remove();
+  const conversationData=chatConversations.find(c=>Number(c.id)===Number(conversationId));
+  if(conversationData)conversationData.unread_count=0;
+  chatMessages.scrollTop=chatMessages.scrollHeight;
+  refreshNotificationCounts();
+}
+
+function previewChatImage(input){
+  const file=input.files&&input.files[0];
+  const preview=qs("chatImagePreview");
+  if(!file){chatImageFile=null;chatImageData=null;chatImagePromise=null;preview.classList.add("hidden");preview.replaceChildren();return;}
+  if(!["image/jpeg","image/png","image/webp"].includes(file.type)||file.size>8*1024*1024){
+    input.value="";
+    chatImageFile=null;chatImageData=null;chatImagePromise=null;
+    toast("Elige una foto JPG, PNG o WebP de menos de 8 MB.","err");
+    return;
+  }
+
+  chatImageFile=file;
+  chatImageData=null;
+  preview.classList.remove("hidden");
+  preview.innerHTML='<span>Preparando foto…</span>';
+  chatImagePromise=compressImage(file,800,0.72).then(dataUrl=>{
+    if(chatImageFile!==file)return null;
+    if(dataUrl.length>2097152)throw new Error("La foto comprimida sigue siendo demasiado grande. Elige una imagen más pequeña.");
+    chatImageData=dataUrl;
+    preview.innerHTML=`<img src="${escapeHTML(dataUrl)}" alt="Vista previa de la foto"/><span>Foto lista para enviar</span><button type="button" aria-label="Quitar foto" onclick="clearChatImage()">Quitar</button>`;
+    return dataUrl;
+  }).catch(error=>{
+    if(chatImageFile===file)clearChatImage();
+    toast(error.message||"No se pudo preparar la foto.","err");
+    return null;
+  });
+}
+
+function clearChatImage(){
+  const input=qs("chatImageInput");
+  const preview=qs("chatImagePreview");
+  if(input)input.value="";
+  chatImageFile=null;
+  chatImageData=null;
+  chatImagePromise=null;
+  if(preview){preview.classList.add("hidden");preview.replaceChildren();}
 }
 
 async function sendMessage(){
   if (!activeConversationId) return;
   const input = qs("chatInput");
   const text = input.value.trim();
-  if (!text) return;
+  let imageData=chatImageData;
+  if(chatImageFile&&!imageData&&chatImagePromise)imageData=await chatImagePromise;
+  if(chatImageFile&&!imageData)return;
+  if (!text&&!imageData) return;
 
   const res = await api("chat.php?action=send", "POST", {
     conversationId: activeConversationId,
     senderId: currentUser.id,
-    message: text
+    message: text,
+    imageData
   });
 
   if (res.error) {
@@ -1479,7 +1592,8 @@ async function sendMessage(){
   }
 
   input.value = "";
-  openConversation(activeConversationId);
+  clearChatImage();
+  await openConversation(activeConversationId);
 }
 
 /* ════════════════════════════════════════════════════════════════

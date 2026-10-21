@@ -14,6 +14,10 @@ No subas volcados con registros ni credenciales a GitHub: pueden contener datos 
 
 Si ya tienes una base creada antes de esta actualización, ejecuta una sola vez el contenido de `product_soft_delete_migration.sql` en esa base antes de desplegar el nuevo código. La migración agrega el marcador necesario para retirar productos sin borrar el historial de compras. En una base nueva no hace falta ejecutarla porque la columna ya está incluida en `database_schema.sql`.
 
+Para activar los avisos de compras/mensajes y el envío de fotos por chat en una base existente, ejecuta una sola vez `notifications_chat_migration.sql` antes de desplegar. En una base nueva, `database_schema.sql` ya incluye sus columnas.
+
+Las fotos del chat se comprimen en el navegador y se guardan en la base de datos. Se permiten JPG, PNG y WebP; el archivo original debe ser menor de 8 MB y la versión comprimida queda limitada a 2 MB.
+
 El panel de administrador permite consultar productos publicados, agotados, pausados y retirados. Los productos agotados o retirados se conservan en la base, pero ya no aparecen disponibles para comprar. Al editar un producto agotado, el vendedor puede cargar stock nuevamente. Si una imagen antigua aparece como “Sin imagen”, vuelve a subirla desde la edición del producto; las rutas de archivos locales no están disponibles en Render.
 
 ## 2. Publicar el código en GitHub

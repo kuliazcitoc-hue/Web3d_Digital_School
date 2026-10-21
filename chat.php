@@ -18,7 +18,19 @@ if ($method === "GET") {
     }
 
     if ($conversationId) {
-        $stmt = $conn->prepare("SELECT m.id, m.conversation_id, m.sender_id, m.receiver_id, m.message, m.created_at, m.is_read, u.nombre AS sender_nombre FROM messages m JOIN users u ON u.id = m.sender_id WHERE m.conversation_id = ? ORDER BY m.created_at ASC");
+        $stmt = $conn->prepare("SELECT buyer_id, seller_id FROM conversations WHERE id = ?");
+        $stmt->bind_param("i", $conversationId);
+        $stmt->execute();
+        $conversation = $stmt->get_result()->fetch_assoc();
+        if (!$conversation || ($userId != $conversation["buyer_id"] && $userId != $conversation["seller_id"])) {
+            http_response_code(403); echo json_encode(["error" => "No autorizado"]); exit;
+        }
+
+        $stmt = $conn->prepare("UPDATE messages SET is_read = 1 WHERE conversation_id = ? AND receiver_id = ? AND is_read = 0");
+        $stmt->bind_param("ii", $conversationId, $userId);
+        $stmt->execute();
+
+        $stmt = $conn->prepare("SELECT m.id, m.conversation_id, m.sender_id, m.receiver_id, m.message, m.image_data, m.created_at, m.is_read, u.nombre AS sender_nombre FROM messages m JOIN users u ON u.id = m.sender_id WHERE m.conversation_id = ? ORDER BY m.created_at ASC");
         $stmt->bind_param("i", $conversationId);
         $stmt->execute();
         $rows = $stmt->get_result();
@@ -27,8 +39,8 @@ if ($method === "GET") {
         echo json_encode(["messages" => $messages]); exit;
     }
 
-    $stmt = $conn->prepare("SELECT c.id, c.product_id, c.buyer_id, c.seller_id, c.updated_at, p.nombre AS product_nombre, u_b.nombre AS buyer_nombre, u_s.nombre AS seller_nombre FROM conversations c JOIN products p ON p.id = c.product_id JOIN users u_b ON u_b.id = c.buyer_id JOIN users u_s ON u_s.id = c.seller_id WHERE c.buyer_id = ? OR c.seller_id = ? ORDER BY c.updated_at DESC");
-    $stmt->bind_param("ii", $userId, $userId);
+    $stmt = $conn->prepare("SELECT c.id, c.product_id, c.buyer_id, c.seller_id, c.updated_at, p.nombre AS product_nombre, u_b.nombre AS buyer_nombre, u_s.nombre AS seller_nombre, (SELECT COUNT(*) FROM messages m WHERE m.conversation_id = c.id AND m.receiver_id = ? AND m.is_read = 0) AS unread_count FROM conversations c JOIN products p ON p.id = c.product_id JOIN users u_b ON u_b.id = c.buyer_id JOIN users u_s ON u_s.id = c.seller_id WHERE c.buyer_id = ? OR c.seller_id = ? ORDER BY c.updated_at DESC");
+    $stmt->bind_param("iii", $userId, $userId, $userId);
     $stmt->execute();
     $rows = $stmt->get_result();
     $conversations = [];
@@ -84,9 +96,13 @@ if ($method === "POST") {
     if ($action === "send") {
         $conversationId = intval($data["conversationId"] ?? 0);
         $senderId = intval($data["senderId"] ?? 0);
-        $message = trim($data["message"] ?? "");
+        $rawMessage = $data["message"] ?? "";
+        if (!is_string($rawMessage)) {
+            http_response_code(400); echo json_encode(["error" => "El mensaje no es válido"]); exit;
+        }
+        $message = trim($rawMessage);
 
-        if (!$conversationId || !$senderId || !$message) {
+        if (!$conversationId || !$senderId) {
             echo json_encode(["error" => "Faltan datos"]); exit;
         }
 
@@ -103,11 +119,29 @@ if ($method === "POST") {
             echo json_encode(["error" => "No autorizado"]); exit;
         }
 
+        $imageData = $data["imageData"] ?? null;
+        if ($imageData !== null) {
+            if (!is_string($imageData) || strlen($imageData) > 2097152
+                || !preg_match('/^data:image\/(jpeg|png|webp);base64,([A-Za-z0-9+\/]+={0,2})$/', $imageData, $matches)) {
+                http_response_code(400); echo json_encode(["error" => "La imagen no es válida o supera el tamaño permitido"]); exit;
+            }
+            $imageBytes = base64_decode($matches[2], true);
+            $imageInfo = $imageBytes === false ? false : getimagesizefromstring($imageBytes);
+            $allowedMimes = ["image/jpeg", "image/png", "image/webp"];
+            if ($imageInfo === false || !in_array($imageInfo["mime"] ?? "", $allowedMimes, true)) {
+                http_response_code(400); echo json_encode(["error" => "El archivo enviado no es una imagen válida"]); exit;
+            }
+        }
+
+        if ($message === "" && $imageData === null) {
+            http_response_code(400); echo json_encode(["error" => "Escribe un mensaje o adjunta una foto"]); exit;
+        }
+
         $receiverId = ($senderId == $conversation["buyer_id"]) ? $conversation["seller_id"] : $conversation["buyer_id"];
         $now = date("Y-m-d H:i:s");
 
-        $stmt = $conn->prepare("INSERT INTO messages (conversation_id, sender_id, receiver_id, message, created_at, is_read) VALUES (?, ?, ?, ?, ?, 0)");
-        $stmt->bind_param("iiiss", $conversationId, $senderId, $receiverId, $message, $now);
+        $stmt = $conn->prepare("INSERT INTO messages (conversation_id, sender_id, receiver_id, message, image_data, created_at, is_read) VALUES (?, ?, ?, ?, ?, ?, 0)");
+        $stmt->bind_param("iiisss", $conversationId, $senderId, $receiverId, $message, $imageData, $now);
         $stmt->execute();
 
         $stmt = $conn->prepare("UPDATE conversations SET updated_at = ? WHERE id = ?");

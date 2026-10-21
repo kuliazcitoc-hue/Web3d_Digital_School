@@ -15,6 +15,7 @@ CREATE TABLE `users` (
   `card_code` varchar(30) DEFAULT NULL,
   `is_admin` tinyint NOT NULL DEFAULT 0,
   `email` varchar(254) DEFAULT NULL,
+  `last_purchase_seen_id` bigint unsigned NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_users_email` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -96,6 +97,7 @@ CREATE TABLE `messages` (
   `sender_id` int NOT NULL,
   `receiver_id` int NOT NULL,
   `message` text NOT NULL,
+  `image_data` longtext DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `is_read` tinyint(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
